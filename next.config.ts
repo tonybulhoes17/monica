@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  /* Toda a plataforma é autenticada e dinâmica por natureza (dashboard,
+   * laudos, admin) — Cache Components (PPR) não se aplica, desligamos. */
   turbopack: {
     rules: {
       "*.css": {
