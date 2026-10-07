@@ -127,6 +127,17 @@ Módulos: `src/lib/vidas/` (cliente PSC, PKCE, criptografia, sessão) +
 `src/lib/signing/vidas.ts` (orquestração: decide simulado vs. real) +
 `src/app/api/vidas/{authorize,callback}` (rotas OAuth).
 
+**Selo de assinatura no rodapé do laudo:** quando o laudo tem assinatura real
+do Vidas (`signature_payload.provider === "vidas"`), o rodapé mostra um selo
+verde "ASSINATURA ELETRÔNICA QUALIFICADA" (ícone de escudo, `src/components/laudo-shell.tsx`),
+um parágrafo legal citando a MP 2.200-2/2001 e as Resoluções CFM 2.299/2021 e
+2.381/2024, e um QR code de validação (`src/lib/qrcode.ts`, aponta para
+`validar.iti.gov.br`) — além do bloco de nome/assinatura/CRM já existente. Se
+a assinatura for simulada ou o laudo ainda não estiver assinado, o rodapé usa
+o texto simples anterior. Esse selo é renderizado ao vivo (HTML), então só
+aparece em laudos assinados a partir desta mudança; PDFs já assinados antes
+dela mantêm os bytes originais no bucket `signed-laudos`.
+
 ## Setup
 
 ### 1. Supabase

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isVidasConfigured } from "@/lib/vidas/psc-client";
 import { getActiveVidasSession } from "@/lib/vidas/session";
+import { generateQrDataUrl } from "@/lib/qrcode";
 import { LaudoEditor } from "./laudo-editor";
 
 export default async function EditarLaudoPage({
@@ -28,10 +29,18 @@ export default async function EditarLaudoPage({
     ? await getActiveVidasSession(profile.id)
     : null;
 
+  const isRealVidasSignature =
+    exam.status === "signed" &&
+    (exam.signature_payload as { provider?: string } | null)?.provider === "vidas";
+  const qrCodeDataUrl = isRealVidasSignature
+    ? await generateQrDataUrl("https://validar.iti.gov.br")
+    : null;
+
   return (
     <LaudoEditor
       exam={exam}
       profile={profile}
+      qrCodeDataUrl={qrCodeDataUrl}
       vidasStatus={{
         configured: vidasConfigured,
         connected: Boolean(vidasSession),

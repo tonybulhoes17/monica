@@ -25,10 +25,12 @@ export function LaudoEditor({
   exam,
   profile,
   vidasStatus,
+  qrCodeDataUrl,
 }: {
   exam: ExamWithPatient;
   profile: Profile;
   vidasStatus: VidasStatus;
+  qrCodeDataUrl?: string | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -244,6 +246,7 @@ export function LaudoEditor({
 
       <LaudoShell
         exam={exam}
+        qrCodeDataUrl={qrCodeDataUrl}
         body={
           <RichTextEditor
             content={contentHtml}
