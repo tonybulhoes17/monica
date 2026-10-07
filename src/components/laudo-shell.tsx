@@ -37,7 +37,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
   const logoUrl = institution?.logo_url || "/branding/logo.png";
 
   return (
-    <div className="laudo-page mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
+    <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
       <header className="mb-6 flex items-center gap-4">
         <div
           className="relative shrink-0"
@@ -85,7 +85,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
         {exam.medications || "nenhuma relatada"}
       </section>
 
-      <section className="flex-1">{body}</section>
+      <section>{body}</section>
 
       <footer className="mt-10 flex items-end justify-between text-xs text-slate-700">
         <div className="w-56">
@@ -113,14 +113,14 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
           {/* O nome fica num bloco inline (largura = largura do próprio
               texto), para a assinatura poder ser centralizada exatamente
               sobre "Dra. Mônica Seixas" (não sobre a coluna inteira) e
-              sobrepor nome + especialidade, como uma assinatura física
-              escaneada por cima do texto impresso. */}
+              sobrepor só essa linha, como uma assinatura física escaneada
+              por cima do nome impresso. */}
           <div className="relative inline-block">
             <div
-              className="absolute h-20 w-40"
+              className="absolute h-16 w-40"
               style={{
                 left: "50%",
-                bottom: "-1.8rem",
+                bottom: "-0.3rem",
                 transform: "translateX(-50%)",
                 zIndex: 0,
               }}
@@ -137,9 +137,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
               {DOCTOR_NAME}
             </p>
           </div>
-          <p className="relative" style={{ zIndex: 1 }}>
-            {DOCTOR_SPECIALTY}
-          </p>
+          <p>{DOCTOR_SPECIALTY}</p>
           <p>{DOCTOR_REGISTRATION}</p>
         </div>
       </footer>
