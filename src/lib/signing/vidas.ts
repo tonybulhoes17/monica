@@ -1,52 +1,66 @@
 import "server-only";
+import { createHash } from "crypto";
+import { isVidasConfigured, signPdf } from "@/lib/vidas/psc-client";
+import { getActiveVidasSession } from "@/lib/vidas/session";
 
-export interface SigningRequest {
-  examId: string;
-  signerName: string;
-  signerCrm: string | null;
+export class VidasReauthorizationRequiredError extends Error {
+  constructor() {
+    super("É necessário autorizar a assinatura digital pelo Vidas.");
+    this.name = "VidasReauthorizationRequiredError";
+  }
 }
 
-export interface SigningResult {
+export interface SignPdfResult {
   provider: "vidas" | "simulated";
   signedAt: string;
-  certificateId: string;
-  raw: Record<string, unknown>;
+  certificateAlias: string | null;
+  /** PDF assinado (PAdES) vindo do Vidas — null no modo simulado. */
+  signedPdf: Buffer | null;
 }
 
-const isVidasConfigured = Boolean(
-  process.env.VIDAS_API_BASE_URL &&
-    process.env.VIDAS_API_CLIENT_ID &&
-    process.env.VIDAS_API_CLIENT_SECRET,
-);
-
 /**
- * Ponto único de integração com o Vidas. Enquanto as credenciais da API não
- * chegarem (VIDAS_API_BASE_URL/CLIENT_ID/CLIENT_SECRET em .env), cai no modo
- * simulado — assina localmente sem nenhuma validação jurídica real, só para
- * permitir testar o resto do fluxo (laudo -> assinar -> PDF -> storage).
+ * Ponto único de integração com o Vidas. Se as credenciais
+ * (VIDAAS_CLIENT_ID/CLIENT_SECRET/SESSION_ENCRYPTION_KEY) não estiverem
+ * configuradas, cai no modo simulado — assina localmente sem validade
+ * jurídica real, só para testar o resto do fluxo.
  *
- * Quando as credenciais chegarem: substituir o corpo do `if (!isVidasConfigured)`
- * pela chamada real à API do Vidas (provavelmente um fluxo OAuth + upload do
- * PDF para assinatura), mantendo a mesma assinatura de função.
+ * Com credenciais configuradas: exige uma sessão Vidas ativa (ver
+ * src/lib/vidas/session.ts) — se não houver, lança
+ * VidasReauthorizationRequiredError para o chamador redirecionar o admin
+ * para /api/vidas/authorize.
  */
-export async function signDocument(
-  request: SigningRequest,
-): Promise<SigningResult> {
-  if (!isVidasConfigured) {
+export async function signExamPdf(params: {
+  profileId: string;
+  pdfBuffer: Buffer;
+}): Promise<SignPdfResult> {
+  if (!isVidasConfigured()) {
     return {
       provider: "simulated",
       signedAt: new Date().toISOString(),
-      certificateId: `SIMULADO-${request.examId.slice(0, 8)}`,
-      raw: { warning: "Integração real com o Vidas ainda não configurada." },
+      certificateAlias: null,
+      signedPdf: null,
     };
   }
 
-  throw new Error(
-    "Integração real com a API do Vidas ainda não implementada. " +
-      "Configure VIDAS_API_BASE_URL/CLIENT_ID/CLIENT_SECRET e implemente a chamada em src/lib/signing/vidas.ts.",
-  );
-}
+  const session = await getActiveVidasSession(params.profileId);
+  if (!session) {
+    throw new VidasReauthorizationRequiredError();
+  }
 
-export function isUsingSimulatedSigning(): boolean {
-  return !isVidasConfigured;
+  const pdfHashBase64 = createHash("sha256")
+    .update(params.pdfBuffer)
+    .digest("base64");
+
+  const result = await signPdf({
+    accessToken: session.accessToken,
+    pdfBase64: params.pdfBuffer.toString("base64"),
+    pdfHashBase64,
+  });
+
+  return {
+    provider: "vidas",
+    signedAt: new Date().toISOString(),
+    certificateAlias: result.certificateAlias,
+    signedPdf: Buffer.from(result.signedPdfBase64, "base64"),
+  };
 }

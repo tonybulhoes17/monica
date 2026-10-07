@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isVidasConfigured } from "@/lib/vidas/psc-client";
+import { getActiveVidasSession } from "@/lib/vidas/session";
 import { LaudoEditor } from "./laudo-editor";
 
 export default async function EditarLaudoPage({
@@ -21,5 +23,20 @@ export default async function EditarLaudoPage({
   if (!exam) notFound();
   if (!exam.content_html) redirect(`/laudos/${examId}`);
 
-  return <LaudoEditor exam={exam} profile={profile} />;
+  const vidasConfigured = isVidasConfigured();
+  const vidasSession = vidasConfigured
+    ? await getActiveVidasSession(profile.id)
+    : null;
+
+  return (
+    <LaudoEditor
+      exam={exam}
+      profile={profile}
+      vidasStatus={{
+        configured: vidasConfigured,
+        connected: Boolean(vidasSession),
+        expiresAt: vidasSession?.expiresAt.toISOString() ?? null,
+      }}
+    />
+  );
 }

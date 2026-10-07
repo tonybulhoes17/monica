@@ -106,6 +106,7 @@ export interface Database {
           signed_at: string | null;
           signed_by: string | null;
           signature_payload: Record<string, unknown> | null;
+          signed_pdf_path: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -124,6 +125,7 @@ export interface Database {
           signed_at?: string | null;
           signed_by?: string | null;
           signature_payload?: Record<string, unknown> | null;
+          signed_pdf_path?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -162,6 +164,38 @@ export interface Database {
             foreignKeyName: "exams_created_by_fkey";
             columns: ["created_by"];
             isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vidas_sessions: {
+        Row: {
+          id: string;
+          profile_id: string;
+          access_token_encrypted: string;
+          certificate_alias: string | null;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          access_token_encrypted: string;
+          certificate_alias?: string | null;
+          expires_at: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["vidas_sessions"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "vidas_sessions_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: true;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },

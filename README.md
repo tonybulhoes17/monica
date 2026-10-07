@@ -83,13 +83,49 @@ campo para a tabela `institutions`.
 
 ## Integração com o Vidas (assinatura digital)
 
-Ainda não há credenciais da API do Vidas. O módulo
-`src/lib/signing/vidas.ts` é o único ponto de integração: hoje ele **simula**
-a assinatura (sem validade jurídica real, só para testar o fluxo completo) e
-mostra "assinatura simulada" no rodapé do laudo. Quando as credenciais
-(`VIDAS_API_BASE_URL`, `VIDAS_API_CLIENT_ID`, `VIDAS_API_CLIENT_SECRET` no
-`.env`) chegarem, implementar a chamada real dentro da função `signDocument`
-— o resto do app não precisa mudar.
+Implementada seguindo o guia oficial de integração (OAuth PKCE + PAdES,
+produto "Certificado em Nuvem" da Valid). Escolhido o escopo
+`signature_session`: a Dra. Monica escaneia o QR code do Vidas **uma vez**
+(sessão dura `VIDAAS_SESSION_LIFETIME_SECONDS`, padrão 12h) e assina quantos
+laudos quiser nesse período, sem escanear de novo a cada laudo.
+
+**Enquanto `VIDAAS_CLIENT_ID` / `VIDAAS_CLIENT_SECRET` /
+`VIDAAS_SESSION_ENCRYPTION_KEY` não estiverem todos configurados**, o sistema
+cai automaticamente no modo simulado (assina sem validade jurídica real, só
+para testar o fluxo) — nenhuma mudança de código necessária para ligar o
+modo real depois, só preencher as variáveis de ambiente.
+
+Fluxo (ver `VIDAS_INTEGRATION_HANDOFF.md` nos Downloads para os detalhes do
+contrato com a Valid):
+
+1. Dra. Monica clica em **Assinar laudo**. Se não houver sessão Vidas ativa,
+   é redirecionada para `/api/vidas/authorize`, que monta a URL de
+   autorização (PKCE) e redireciona para o Vidas, que mostra o QR code.
+2. Ela escaneia com o app do Vidas no celular. O Vidas redireciona de volta
+   para `/api/vidas/callback`, que troca o `code` por um `access_token` e
+   guarda criptografado (AES-256-GCM) em `vidas_sessions`, com validade.
+3. De volta no editor, assinar agora funciona: o laudo é renderizado em PDF
+   (mesmo pipeline do botão "Baixar PDF"), checado contra o limite de 7MB do
+   Vidas, assinado via `POST /v0/oauth/signature`, e o PDF assinado (PAdES)
+   é salvo no bucket privado `signed-laudos` — esse arquivo (não uma
+   reconstrução em HTML) é o laudo oficial a partir daí; "Baixar PDF" passa a
+   servir exatamente esses bytes.
+4. A sessão expira sozinha (`expires_at`); expirando, o próximo "Assinar"
+   redireciona para autorizar de novo.
+
+**Pendente de credenciais reais da Valid para funcionar de verdade:**
+- `VIDAAS_CLIENT_ID` / `VIDAAS_CLIENT_SECRET`: se a Dra. Monica ainda não tem
+  uma aplicação registrada no PSC do Vidas, rodar
+  `scripts/vidas-register-application.mjs` (documentado no próprio arquivo)
+  com o e-mail dela e o redirect `https://laudos-eeg-monica.vercel.app/api/vidas/callback`.
+- `VIDAAS_SESSION_ENCRYPTION_KEY`: gerar com `openssl rand -hex 32`.
+- A Dra. Monica precisa ter um certificado em nuvem ativo junto à Valid
+  (produto separado da integração em si — `POST /v0/oauth/user-discovery`
+  confere isso, mas essa consulta ainda não está ligada à UI).
+
+Módulos: `src/lib/vidas/` (cliente PSC, PKCE, criptografia, sessão) +
+`src/lib/signing/vidas.ts` (orquestração: decide simulado vs. real) +
+`src/app/api/vidas/{authorize,callback}` (rotas OAuth).
 
 ## Setup
 
@@ -104,6 +140,13 @@ mostra "assinatura simulada" no rodapé do laudo. Quando as credenciais
    - `supabase/migrations/0003_seed_template_vigilia_sono_adulto.sql`
      (primeiro modelo de laudo pronto)
    - `supabase/migrations/0004_seed_more_templates.sql` (mais 4 modelos)
+   - `supabase/migrations/0005_fix_template_paragraph_spacing.sql`
+   - `supabase/migrations/0006_fix_template_line_height.sql`
+   - `supabase/migrations/0007_adjust_technical_block_line_height.sql`
+   - `supabase/migrations/0008_fix_impressao_and_line_height.sql`
+   - `supabase/migrations/0009_vidas_integration.sql` (tabela
+     `vidas_sessions`, coluna `exams.signed_pdf_path`, bucket privado
+     `signed-laudos`)
 3. Em **Project Settings → API**, copie `URL`, `anon public key` e
    `service_role key` para o `.env.local` (ver passo 2 abaixo).
 4. Crie o primeiro usuário admin (Dra. Monica) com o script
@@ -163,7 +206,8 @@ src/
       admin/instituicoes/       admin: cadastro de instituições + upload de logo
     (print)/laudos/[examId]/imprimir/   visualização de impressão (sem menu)
     api/admin/secretarias/      criação de usuário via Supabase Admin API
-    api/laudos/[examId]/pdf/    geração de PDF (Puppeteer)
+    api/laudos/[examId]/pdf/    geração de PDF (Puppeteer) ou PDF assinado
+    api/vidas/{authorize,callback}/   rotas OAuth do Vidas
   components/
     rich-text-editor.tsx        editor de texto rico (Tiptap) com toolbar
     laudo-shell.tsx              layout visual do laudo (cabeçalho/caixa de
@@ -171,12 +215,14 @@ src/
     confirm-dialog.tsx / prompt-dialog.tsx
   lib/
     supabase/                   clients (browser/server/admin) + middleware
-    signing/vidas.ts            ponto único de integração com o Vidas
+    signing/vidas.ts            orquestração: simulado vs. assinatura real
+    vidas/                      cliente PSC, PKCE, criptografia, sessão
     pdf.ts                      geração de PDF via Chromium headless
     template.ts                 merge de placeholders do modelo
     age.ts / cpf.ts             helpers
+scripts/
+  create-admin.mjs                    cria usuário admin via Admin API
+  vidas-register-application.mjs      registro único da app no PSC do Vidas
 supabase/migrations/
-  0001_init.sql
-  0002_institutions.sql
-  0003_seed_template_vigilia_sono_adulto.sql
+  0001_init.sql … 0009_vidas_integration.sql
 ```

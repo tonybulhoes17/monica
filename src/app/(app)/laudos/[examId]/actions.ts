@@ -2,10 +2,33 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies, headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { mergeTemplatePlaceholders } from "@/lib/template";
-import { signDocument } from "@/lib/signing/vidas";
+import { renderExamPdf } from "@/lib/pdf";
+import { signExamPdf, VidasReauthorizationRequiredError } from "@/lib/signing/vidas";
+
+const MAX_PDF_BYTES = 7 * 1024 * 1024; // limite do Vidas (manual §3.2)
+
+async function getAppBaseUrl(): Promise<string> {
+  if (process.env.APP_BASE_URL) return process.env.APP_BASE_URL;
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "localhost:3000";
+  const protocol = host.startsWith("localhost") || host.startsWith("127.0.0.1")
+    ? "http"
+    : "https";
+  return `${protocol}://${host}`;
+}
+
+async function getCookieHeader(): Promise<string> {
+  const cookieStore = await cookies();
+  return cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+}
 
 async function loadExamWithPatient(examId: string) {
   const supabase = await createClient();
@@ -84,6 +107,7 @@ export async function revertToDraft(examId: string) {
       signed_at: null,
       signed_by: null,
       signature_payload: null,
+      signed_pdf_path: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", examId);
@@ -122,19 +146,54 @@ export async function signLaudo(examId: string) {
   if (!exam) throw new Error("Exame não encontrado.");
   if (!exam.content_html) throw new Error("O laudo ainda não tem conteúdo.");
 
-  const signature = await signDocument({
-    examId,
-    signerName: admin.full_name,
-    signerCrm: admin.crm,
-  });
+  const baseUrl = await getAppBaseUrl();
+  const cookieHeader = await getCookieHeader();
+  const pdfBuffer = await renderExamPdf(examId, baseUrl, cookieHeader);
+
+  if (pdfBuffer.length > MAX_PDF_BYTES) {
+    throw new Error(
+      "O laudo gerado excede 7MB, limite aceito pelo Vidas para assinatura. Reduza imagens/conteúdo e tente novamente.",
+    );
+  }
+
+  let signResult;
+  try {
+    signResult = await signExamPdf({ profileId: admin.id, pdfBuffer });
+  } catch (err) {
+    if (err instanceof VidasReauthorizationRequiredError) {
+      redirect(
+        `/api/vidas/authorize?returnTo=${encodeURIComponent(`/laudos/${examId}/editar`)}`,
+      );
+    }
+    throw err;
+  }
+
+  let signedPdfPath: string | null = null;
+  if (signResult.signedPdf) {
+    const adminClient = createAdminClient();
+    const path = `${examId}-${Date.now()}.pdf`;
+    const { error: uploadError } = await adminClient.storage
+      .from("signed-laudos")
+      .upload(path, signResult.signedPdf, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+    if (uploadError) throw new Error(uploadError.message);
+    signedPdfPath = path;
+  }
 
   const { error } = await supabase
     .from("exams")
     .update({
       status: "signed",
-      signed_at: signature.signedAt,
+      signed_at: signResult.signedAt,
       signed_by: admin.id,
-      signature_payload: { ...signature },
+      signature_payload: {
+        provider: signResult.provider,
+        signedAt: signResult.signedAt,
+        certificateAlias: signResult.certificateAlias,
+      },
+      signed_pdf_path: signedPdfPath,
       updated_at: new Date().toISOString(),
     })
     .eq("id", examId);

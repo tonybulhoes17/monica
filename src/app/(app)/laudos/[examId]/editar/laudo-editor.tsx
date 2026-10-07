@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { LaudoShell } from "@/components/laudo-shell";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -15,14 +15,25 @@ import {
   signLaudo,
 } from "../actions";
 
+export interface VidasStatus {
+  configured: boolean;
+  connected: boolean;
+  expiresAt: string | null;
+}
+
 export function LaudoEditor({
   exam,
   profile,
+  vidasStatus,
 }: {
   exam: ExamWithPatient;
   profile: Profile;
+  vidasStatus: VidasStatus;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const vidasConnectedJustNow = searchParams.get("vidas_connected") === "1";
+  const vidasError = searchParams.get("vidas_error");
   const [contentHtml, setContentHtml] = useState(exam.content_html ?? "");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -90,6 +101,18 @@ export function LaudoEditor({
       await signLaudo(exam.id);
       router.refresh();
     } catch (err) {
+      // redirect() dentro da server action (ex: precisa reautorizar no
+      // Vidas) lança um erro especial do Next.js que precisa propagar,
+      // não ser tratado como falha de assinatura.
+      if (
+        err &&
+        typeof err === "object" &&
+        "digest" in err &&
+        typeof (err as { digest?: unknown }).digest === "string" &&
+        (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+      ) {
+        throw err;
+      }
       setError(err instanceof Error ? err.message : "Erro ao assinar.");
     } finally {
       setSigning(false);
@@ -156,6 +179,46 @@ export function LaudoEditor({
           )}
         </div>
       </div>
+
+      {vidasStatus.configured && !isSigned && (
+        <div className="no-print flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+          {vidasStatus.connected ? (
+            <span>
+              Vidas conectado
+              {vidasStatus.expiresAt && (
+                <>
+                  {" "}
+                  até{" "}
+                  {new Date(vidasStatus.expiresAt).toLocaleString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </>
+              )}
+              .
+            </span>
+          ) : (
+            <span>Vidas não conectado — será pedido ao clicar em Assinar.</span>
+          )}
+          <a
+            href={`/api/vidas/authorize?returnTo=${encodeURIComponent(`/laudos/${exam.id}/editar`)}`}
+            className="font-medium text-slate-900 underline"
+          >
+            {vidasStatus.connected ? "Reconectar" : "Conectar agora"}
+          </a>
+        </div>
+      )}
+
+      {vidasConnectedJustNow && (
+        <p className="no-print text-sm text-emerald-600">
+          Conectado ao Vidas com sucesso.
+        </p>
+      )}
+      {vidasError && (
+        <p className="no-print text-sm text-red-600">
+          Falha ao conectar ao Vidas ({vidasError}). Tente novamente.
+        </p>
+      )}
 
       {isSigned && (
         <div className="no-print flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
