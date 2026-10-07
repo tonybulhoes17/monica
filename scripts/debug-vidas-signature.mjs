@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { createHash, createDecipheriv } from "crypto";
+import { createHash, createDecipheriv, randomUUID } from "crypto";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../.env.local", import.meta.url), "utf8")
@@ -28,14 +28,12 @@ function decryptSecret(payload, keyHex) {
 }
 
 const headers = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
-
 const sessRes = await fetch(`${base}/rest/v1/vidas_sessions?select=*`, { headers });
 const sessions = await sessRes.json();
 if (!sessions[0]) {
   console.error("Nenhuma sessão Vidas encontrada.");
   process.exit(1);
 }
-
 const accessToken = decryptSecret(sessions[0].access_token_encrypted, encKeyHex);
 console.log("Sessão encontrada, expira em:", sessions[0].expires_at);
 
@@ -44,30 +42,30 @@ if (!pdfPath) {
   console.error("Uso: node scripts/debug-vidas-signature.mjs <caminho-do-pdf>");
   process.exit(1);
 }
-
 const pdfBuffer = readFileSync(pdfPath);
 console.log("PDF carregado:", pdfBuffer.length, "bytes");
 
 const pdfBase64 = pdfBuffer.toString("base64");
 const pdfHashBase64 = createHash("sha256").update(pdfBuffer).digest("base64");
 
-const hashAlgorithm = process.argv[3] || "2.16.840.1.101.3.4.2.1";
+const SHA256_OID = "2.16.840.1.101.3.4.2.1";
 
 const body = {
-  signature_format: "PAdES_AD_RT",
-  hash_algorithm: hashAlgorithm,
-  padding_method: "PKCS1V1_5",
-  pdf_signature_page: false,
   hashes: [
     {
+      id: randomUUID(),
+      alias: "laudo-eeg-teste",
       hash: pdfHashBase64,
+      hash_algorithm: SHA256_OID,
+      signature_format: "PAdES_AD_RT",
       base64_content: pdfBase64,
+      padding_method: "PKCS1V1_5",
+      pdf_signature_page: false,
     },
   ],
 };
-console.log("hash_algorithm testado:", hashAlgorithm);
 
-console.log("Chamando POST /v0/oauth/signature...");
+console.log("Chamando POST /v0/oauth/signature (estrutura aninhada)...");
 const res = await fetch(`${vidasBase}/v0/oauth/signature`, {
   method: "POST",
   headers: {

@@ -158,7 +158,12 @@ export async function signLaudo(examId: string) {
 
   let signResult;
   try {
-    signResult = await signExamPdf({ profileId: admin.id, pdfBuffer });
+    signResult = await signExamPdf({
+      profileId: admin.id,
+      pdfBuffer,
+      examId,
+      alias: `laudo-eeg-${exam.patient.full_name}`,
+    });
   } catch (err) {
     if (err instanceof VidasReauthorizationRequiredError) {
       redirect(

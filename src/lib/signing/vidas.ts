@@ -32,6 +32,8 @@ export interface SignPdfResult {
 export async function signExamPdf(params: {
   profileId: string;
   pdfBuffer: Buffer;
+  examId: string;
+  alias: string;
 }): Promise<SignPdfResult> {
   if (!isVidasConfigured()) {
     return {
@@ -55,6 +57,8 @@ export async function signExamPdf(params: {
     accessToken: session.accessToken,
     pdfBase64: params.pdfBuffer.toString("base64"),
     pdfHashBase64,
+    id: params.examId,
+    alias: params.alias,
   });
 
   return {

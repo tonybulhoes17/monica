@@ -99,19 +99,28 @@ export interface VidasSignatureResult {
   certificateAlias: string | null;
 }
 
+const SHA256_OID = "2.16.840.1.101.3.4.2.1";
+
 /**
  * POST /v0/oauth/signature — assina o PDF (PAdES) com o certificado em
  * nuvem do usuário autorizado via `accessToken`.
  *
- * O formato exato da resposta (onde o PDF assinado vem aninhado) deve ser
- * confirmado contra o manual vigente da Valid na primeira integração real;
- * tentamos os formatos mais prováveis listados no guia de handoff.
+ * Estrutura confirmada numa integração irmã já em produção (não a mesma
+ * coisa que o guia de handoff genérico sugeria): signature_format,
+ * hash_algorithm, padding_method e pdf_signature_page vão DENTRO de cada
+ * item de `hashes[]`, não na raiz do corpo. A resposta traz o PDF assinado
+ * em `signatures[0].file_base64_signed` e o alias do certificado usado em
+ * `certificate_alias` (raiz da resposta).
  */
 export async function signPdf(params: {
   accessToken: string;
   pdfBase64: string;
   pdfHashBase64: string;
+  id: string;
+  alias: string;
 }): Promise<VidasSignatureResult> {
+  const certificateAlias = process.env.VIDAAS_CERTIFICATE_ALIAS?.trim();
+
   const res = await fetch(`${BASE_URL}/v0/oauth/signature`, {
     method: "POST",
     headers: {
@@ -119,14 +128,17 @@ export async function signPdf(params: {
       Authorization: `Bearer ${params.accessToken}`,
     },
     body: JSON.stringify({
-      signature_format: "PAdES_AD_RT",
-      hash_algorithm: "2.16.840.1.101.3.4.2.1", // OID SHA-256
-      padding_method: "PKCS1V1_5",
-      pdf_signature_page: false,
+      ...(certificateAlias ? { certificate_alias: certificateAlias } : {}),
       hashes: [
         {
+          id: params.id,
+          alias: params.alias,
           hash: params.pdfHashBase64,
+          hash_algorithm: SHA256_OID,
+          signature_format: "PAdES_AD_RT",
           base64_content: params.pdfBase64,
+          padding_method: "PKCS1V1_5",
+          pdf_signature_page: false,
         },
       ],
     }),
@@ -140,9 +152,6 @@ export async function signPdf(params: {
     console.error("[vidas] signature falhou", {
       status: res.status,
       pdfBytes: Buffer.from(params.pdfBase64, "base64").length,
-      hashAlgorithm: "2.16.840.1.101.3.4.2.1",
-      paddingMethod: "PKCS1V1_5",
-      signatureFormat: "PAdES_AD_RT",
     });
     throw new Error(
       `Falha ao assinar documento no Vidas (HTTP ${res.status}): ${text.slice(0, 4000)}`,
@@ -150,23 +159,18 @@ export async function signPdf(params: {
   }
 
   const data = await res.json();
-
-  const signedBase64: string | undefined =
-    data?.signatures?.[0]?.base64_content ??
-    data?.signatures?.[0]?.signed_content ??
-    data?.base64_content ??
-    data?.signed_content;
+  const signedBase64: string | undefined = data?.signatures?.[0]?.file_base64_signed;
 
   if (!signedBase64) {
     throw new Error(
-      "Resposta do Vidas não trouxe o PDF assinado no formato esperado — confira o manual atual da Valid e ajuste o parse em src/lib/vidas/psc-client.ts.",
+      "Resposta do Vidas não trouxe o PDF assinado no formato esperado (signatures[0].file_base64_signed).",
     );
   }
 
-  const certificateAlias: string | null =
-    data?.signatures?.[0]?.certificate_alias ?? data?.certificate_alias ?? null;
-
-  return { signedPdfBase64: signedBase64, certificateAlias };
+  return {
+    signedPdfBase64: signedBase64,
+    certificateAlias: data?.certificate_alias ?? null,
+  };
 }
 
 export interface VidasDiscoveryResult {
