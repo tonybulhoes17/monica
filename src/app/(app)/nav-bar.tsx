@@ -12,7 +12,6 @@ export function NavBar({ profile }: { profile: Profile }) {
 
   const links = [
     { href: "/dashboard", label: "Painel" },
-    { href: "/pacientes/novo", label: "Novo paciente" },
     ...(profile.role === "admin"
       ? [
           { href: "/admin/secretarias", label: "Secretárias" },
@@ -50,6 +49,12 @@ export function NavBar({ profile }: { profile: Profile }) {
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm text-slate-600">
+          <Link
+            href="/pacientes/novo"
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+          >
+            + Novo paciente
+          </Link>
           <span>{profile.full_name}</span>
           <button
             onClick={handleSignOut}
