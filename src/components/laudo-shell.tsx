@@ -107,29 +107,38 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
         </div>
 
         <div
-          className="w-56 text-right"
-          style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "9pt" }}
+          className="w-56"
+          style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "9pt", textAlign: "right" }}
         >
-          {/* A assinatura fica centralizada sobre o nome e um pouco por
-              cima dele (margem negativa puxa o texto para cima), como uma
-              assinatura física escaneada sobre o nome impresso. */}
-          <div
-            className="relative mx-auto h-16 w-40"
-            style={{ marginBottom: "-1.4rem" }}
-          >
-            <Image
-              src="/branding/assinatura.jpg"
-              alt="Assinatura"
-              fill
-              className="object-contain"
-              unoptimized
-            />
+          {/* O nome fica num bloco inline (largura = largura do próprio
+              texto), para a assinatura poder ser centralizada exatamente
+              sobre "Dra. Mônica Seixas" (não sobre a coluna inteira) e
+              sobrepor um pouco o texto, como uma assinatura física
+              escaneada por cima do nome impresso. */}
+          <div className="relative inline-block">
+            <div
+              className="absolute h-16 w-40"
+              style={{
+                left: "50%",
+                bottom: "-0.6rem",
+                transform: "translateX(-50%)",
+                zIndex: 0,
+              }}
+            >
+              <Image
+                src="/branding/assinatura.jpg"
+                alt="Assinatura"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+            <p className="relative font-medium" style={{ zIndex: 1 }}>
+              {DOCTOR_NAME}
+            </p>
           </div>
-          <div className="relative">
-            <p className="font-medium">{DOCTOR_NAME}</p>
-            <p>{DOCTOR_SPECIALTY}</p>
-            <p>{DOCTOR_REGISTRATION}</p>
-          </div>
+          <p>{DOCTOR_SPECIALTY}</p>
+          <p>{DOCTOR_REGISTRATION}</p>
         </div>
       </footer>
     </div>
