@@ -25,6 +25,9 @@ const SERVICE_LINES = [
   "VÍDEO- ELETROENCEFALOGRAMA (VÍDEO-EEG)",
 ];
 
+const TIMES_NEW_ROMAN = '"Times New Roman", Times, serif';
+const DARK_BLUE = "#002060";
+
 export function LaudoShell({ exam, body }: LaudoShellProps) {
   const { patient, institution } = exam;
   const isSigned = exam.status === "signed";
@@ -36,7 +39,10 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
   return (
     <div className="laudo-page mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
       <header className="mb-6 flex items-center gap-4">
-        <div className="relative h-20 w-20 shrink-0">
+        <div
+          className="relative shrink-0"
+          style={{ width: "4.1cm", height: "2.1cm" }}
+        >
           <Image
             src={logoUrl}
             alt={institution?.name ?? "Logo"}
@@ -45,32 +51,30 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
             unoptimized
           />
         </div>
-        <div className="text-sm font-bold leading-tight text-slate-900">
+        <div
+          className="leading-tight text-slate-900"
+          style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "12pt", fontWeight: 700 }}
+        >
           {SERVICE_LINES.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
       </header>
 
-      <section className="laudo-patient-box mb-6 grid grid-cols-2 gap-x-6 gap-y-1 rounded-sm border-[1.5px] border-[#1f3a63] px-4 py-3 text-sm text-slate-900">
-        <p>
-          <span className="font-bold">Nome</span>: {patient.full_name}
-        </p>
-        <p>
-          <span className="font-bold">Data do exame:</span>{" "}
-          {formatDateBr(exam.exam_date)}
-        </p>
-        <p>
-          <span className="font-bold">Data de Nascimento:</span>{" "}
-          {formatDateBr(patient.birth_date)}
-        </p>
-        <p>
-          <span className="font-bold">Idade:</span>{" "}
-          {formatAge(patient.birth_date, exam.exam_date)}
-        </p>
-        <p className="col-span-2">
-          <span className="font-bold">Solicitante</span>: {exam.requesting_doctor}
-        </p>
+      <section
+        className="laudo-patient-box mb-6 grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
+        style={{
+          fontFamily: TIMES_NEW_ROMAN,
+          fontSize: "12pt",
+          fontWeight: 400,
+          border: `2.25pt solid ${DARK_BLUE}`,
+        }}
+      >
+        <p>Nome: {patient.full_name}</p>
+        <p>Data do exame: {formatDateBr(exam.exam_date)}</p>
+        <p>Data de Nascimento: {formatDateBr(patient.birth_date)}</p>
+        <p>Idade: {formatAge(patient.birth_date, exam.exam_date)}</p>
+        <p className="col-span-2">Solicitante: {exam.requesting_doctor}</p>
       </section>
 
       <section className="no-print mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
@@ -102,8 +106,11 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
           )}
         </div>
 
-        <div className="w-56 text-center">
-          <div className="relative mx-auto mb-1 h-16 w-40">
+        <div
+          className="w-56 text-right"
+          style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "9pt" }}
+        >
+          <div className="relative ml-auto mb-1 h-16 w-40 bg-white">
             <Image
               src="/branding/assinatura.jpg"
               alt="Assinatura"
@@ -112,9 +119,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
               unoptimized
             />
           </div>
-          <p className="border-t border-slate-400 pt-1 font-medium">
-            {DOCTOR_NAME}
-          </p>
+          <p className="font-medium">{DOCTOR_NAME}</p>
           <p>{DOCTOR_SPECIALTY}</p>
           <p>{DOCTOR_REGISTRATION}</p>
         </div>
