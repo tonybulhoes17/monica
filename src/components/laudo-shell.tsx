@@ -38,7 +38,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
 
   return (
     <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
-      <header className="mb-6 flex items-center gap-4">
+      <header className="flex items-end gap-4">
         <div
           className="relative shrink-0"
           style={{ width: "4.1cm", height: "2.1cm" }}
@@ -62,7 +62,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
       </header>
 
       <section
-        className="laudo-patient-box mb-6 grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
+        className="laudo-patient-box grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
         style={{
           fontFamily: TIMES_NEW_ROMAN,
           fontSize: "12pt",
@@ -70,14 +70,27 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
           border: `2.25pt solid ${DARK_BLUE}`,
         }}
       >
-        <p>Nome: {patient.full_name}</p>
-        <p>Data do exame: {formatDateBr(exam.exam_date)}</p>
-        <p>Data de Nascimento: {formatDateBr(patient.birth_date)}</p>
-        <p>Idade: {formatAge(patient.birth_date, exam.exam_date)}</p>
-        <p className="col-span-2">Solicitante: {exam.requesting_doctor}</p>
+        <p>
+          <span className="font-bold">Nome</span>: {patient.full_name}
+        </p>
+        <p>
+          <span className="font-bold">Data do exame</span>:{" "}
+          {formatDateBr(exam.exam_date)}
+        </p>
+        <p>
+          <span className="font-bold">Data de Nascimento</span>:{" "}
+          {formatDateBr(patient.birth_date)}
+        </p>
+        <p>
+          <span className="font-bold">Idade</span>:{" "}
+          {formatAge(patient.birth_date, exam.exam_date)}
+        </p>
+        <p className="col-span-2">
+          <span className="font-bold">Solicitante</span>: {exam.requesting_doctor}
+        </p>
       </section>
 
-      <section className="no-print mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+      <section className="no-print mt-4 mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
         <span className="font-semibold">
           Referência para a Dra. Monica (não entra no laudo impresso):
         </span>{" "}
