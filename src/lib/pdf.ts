@@ -1,5 +1,12 @@
 import "server-only";
 
+// Precisa bater exatamente com a versão instalada de @sparticuz/chromium-min
+// no package.json (o pacote não segue semver — mudanças de patch podem ser
+// incompatíveis). Ao atualizar o pacote, atualizar esta constante junto,
+// conferindo o asset "chromium-v<versão>-pack.x64.tar" em
+// https://github.com/Sparticuz/chromium/releases
+const CHROMIUM_PACK_VERSION = "147.0.0";
+
 /**
  * Renderiza a rota de impressão do laudo (/laudos/[id]/imprimir) com um
  * Chromium headless e devolve o PDF resultante — garante que o PDF fica
@@ -23,7 +30,7 @@ export async function renderExamPdf(
     browser = await puppeteerCore.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(
-        "https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.tar",
+        `https://github.com/Sparticuz/chromium/releases/download/v${CHROMIUM_PACK_VERSION}/chromium-v${CHROMIUM_PACK_VERSION}-pack.x64.tar`,
       ),
       headless: true,
     });

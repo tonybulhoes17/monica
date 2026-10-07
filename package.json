@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
-    "@sparticuz/chromium-min": "^147.0.0",
+    "@sparticuz/chromium-min": "147.0.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.109.0",
     "@tiptap/extension-text-align": "^3.31.4",
