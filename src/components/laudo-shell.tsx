@@ -110,7 +110,13 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
           className="w-56 text-right"
           style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "9pt" }}
         >
-          <div className="relative ml-auto mb-1 h-16 w-40 bg-white">
+          {/* A assinatura fica centralizada sobre o nome e um pouco por
+              cima dele (margem negativa puxa o texto para cima), como uma
+              assinatura física escaneada sobre o nome impresso. */}
+          <div
+            className="relative mx-auto h-16 w-40"
+            style={{ marginBottom: "-1.4rem" }}
+          >
             <Image
               src="/branding/assinatura.jpg"
               alt="Assinatura"
@@ -119,9 +125,11 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
               unoptimized
             />
           </div>
-          <p className="font-medium">{DOCTOR_NAME}</p>
-          <p>{DOCTOR_SPECIALTY}</p>
-          <p>{DOCTOR_REGISTRATION}</p>
+          <div className="relative">
+            <p className="font-medium">{DOCTOR_NAME}</p>
+            <p>{DOCTOR_SPECIALTY}</p>
+            <p>{DOCTOR_REGISTRATION}</p>
+          </div>
         </div>
       </footer>
     </div>
