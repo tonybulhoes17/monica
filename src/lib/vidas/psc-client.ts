@@ -134,8 +134,18 @@ export async function signPdf(params: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
+    // Diagnóstico sem vazar segredos: nunca logar accessToken nem o
+    // base64 do PDF, só tamanhos/metadados para correlacionar com o
+    // traceId que a Valid devolve no corpo do erro.
+    console.error("[vidas] signature falhou", {
+      status: res.status,
+      pdfBytes: Buffer.from(params.pdfBase64, "base64").length,
+      hashAlgorithm: "2.16.840.1.101.3.4.2.1",
+      paddingMethod: "PKCS1V1_5",
+      signatureFormat: "PAdES_AD_RT",
+    });
     throw new Error(
-      `Falha ao assinar documento no Vidas (HTTP ${res.status}): ${text.slice(0, 300)}`,
+      `Falha ao assinar documento no Vidas (HTTP ${res.status}): ${text.slice(0, 4000)}`,
     );
   }
 
