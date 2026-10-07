@@ -1,9 +1,9 @@
-Coloque aqui os arquivos enviados pela Dra. Monica:
+Arquivos enviados pela Dra. Monica, já em uso:
 
-- `logo.png` — logo da clínica (cabeçalho do laudo e ícone da plataforma)
-- `assinatura.png` — imagem da assinatura (canto inferior esquerdo)
-- `carimbo.png` — carimbo com nome/CRM/RQE (canto inferior direito), se for
-  imagem em vez de texto
+- `logo.png` — logo da clínica (monograma MS), usada como logo padrão no
+  cabeçalho do laudo e como logo da instituição padrão.
+- `assinatura.jpg` — assinatura usada no canto inferior direito do laudo,
+  junto com o carimbo de texto (nome/especialidade/CRM).
 
-Depois de adicionar os arquivos, atualizar `src/components/laudo-shell.tsx`
-para usá-los no lugar dos placeholders tracejados.
+Logos de outras instituições não ficam aqui — são enviadas pela tela
+**Instituições** (admin) e armazenadas no Supabase Storage.

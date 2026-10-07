@@ -55,6 +55,22 @@ export interface Database {
           },
         ];
       };
+      institutions: {
+        Row: {
+          id: string;
+          name: string;
+          logo_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          logo_url?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["institutions"]["Insert"]>;
+        Relationships: [];
+      };
       report_templates: {
         Row: {
           id: string;
@@ -84,6 +100,7 @@ export interface Database {
           comorbidities: string | null;
           medications: string | null;
           template_id: string | null;
+          institution_id: string | null;
           content_html: string | null;
           status: ExamStatus;
           signed_at: string | null;
@@ -101,6 +118,7 @@ export interface Database {
           comorbidities?: string | null;
           medications?: string | null;
           template_id?: string | null;
+          institution_id?: string | null;
           content_html?: string | null;
           status?: ExamStatus;
           signed_at?: string | null;
@@ -124,6 +142,13 @@ export interface Database {
             columns: ["template_id"];
             isOneToOne: false;
             referencedRelation: "report_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exams_institution_id_fkey";
+            columns: ["institution_id"];
+            isOneToOne: false;
+            referencedRelation: "institutions";
             referencedColumns: ["id"];
           },
           {
@@ -154,6 +179,10 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Patient = Database["public"]["Tables"]["patients"]["Row"];
 export type ReportTemplate =
   Database["public"]["Tables"]["report_templates"]["Row"];
+export type Institution = Database["public"]["Tables"]["institutions"]["Row"];
 export type Exam = Database["public"]["Tables"]["exams"]["Row"];
 
-export type ExamWithPatient = Exam & { patient: Patient };
+export type ExamWithPatient = Exam & {
+  patient: Patient;
+  institution: Institution | null;
+};

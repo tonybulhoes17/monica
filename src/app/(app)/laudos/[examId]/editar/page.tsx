@@ -14,7 +14,7 @@ export default async function EditarLaudoPage({
 
   const { data: exam } = await supabase
     .from("exams")
-    .select("*, patient:patients(*)")
+    .select("*, patient:patients(*), institution:institutions(*)")
     .eq("id", examId)
     .single();
 

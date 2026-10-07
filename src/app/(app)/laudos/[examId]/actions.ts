@@ -92,6 +92,28 @@ export async function revertToDraft(examId: string) {
   revalidatePath(`/laudos/${examId}/editar`);
 }
 
+/**
+ * Transforma o laudo atual (como está neste exame) em um novo modelo padrão,
+ * reutilizável para outros pacientes — "qualquer laudo pode virar um tipo
+ * novo de modelo, basta dar um nome".
+ */
+export async function saveExamAsTemplate(examId: string, name: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const exam = await loadExamWithPatient(examId);
+  if (!exam) throw new Error("Exame não encontrado.");
+  if (!exam.content_html) throw new Error("O laudo ainda não tem conteúdo.");
+
+  const { error } = await supabase.from("report_templates").insert({
+    name,
+    content_html: exam.content_html,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/modelos");
+}
+
 export async function signLaudo(examId: string) {
   const admin = await requireAdmin();
   const supabase = await createClient();

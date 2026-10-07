@@ -13,7 +13,7 @@ export default async function ImprimirLaudoPage({
 
   const { data: exam } = await supabase
     .from("exams")
-    .select("*, patient:patients(*)")
+    .select("*, patient:patients(*), institution:institutions(*)")
     .eq("id", examId)
     .single();
 
@@ -23,7 +23,6 @@ export default async function ImprimirLaudoPage({
     <>
       <AutoPrint />
       <LaudoShell
-        patient={exam.patient}
         exam={exam}
         body={
           <div

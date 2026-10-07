@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCpf, isValidCpf, onlyDigits } from "@/lib/cpf";
 import { calculateAge } from "@/lib/age";
+import type { Institution } from "@/lib/database.types";
 import {
   createPatientExam,
   lookupPatientByCpf,
@@ -14,7 +15,11 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function PatientExamForm() {
+export function PatientExamForm({
+  institutions,
+}: {
+  institutions: Institution[];
+}) {
   const router = useRouter();
   const [cpf, setCpf] = useState("");
   const [fullName, setFullName] = useState("");
@@ -23,6 +28,9 @@ export function PatientExamForm() {
   const [requestingDoctor, setRequestingDoctor] = useState("");
   const [comorbidities, setComorbidities] = useState("");
   const [medications, setMedications] = useState("");
+  const [institutionId, setInstitutionId] = useState(
+    institutions[0]?.id ?? "",
+  );
 
   const [lookup, setLookup] = useState<PatientLookupResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -71,6 +79,7 @@ export function PatientExamForm() {
         requestingDoctor,
         comorbidities,
         medications,
+        institutionId: institutionId || null,
       });
       router.push(`/laudos/${examId}`);
     } catch (err) {
@@ -148,6 +157,26 @@ export function PatientExamForm() {
             value={age !== null ? `${age} anos` : ""}
             className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
           />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-slate-700">
+            Instituição (local do exame)
+          </label>
+          <select
+            required
+            value={institutionId}
+            onChange={(e) => setInstitutionId(e.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {institutions.length === 0 && (
+              <option value="">Nenhuma instituição cadastrada</option>
+            )}
+            {institutions.map((inst) => (
+              <option key={inst.id} value={inst.id}>
+                {inst.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700">

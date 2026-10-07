@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { LaudoShell } from "@/components/laudo-shell";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { PromptDialog } from "@/components/prompt-dialog";
 import { StatusBadge } from "@/components/status-badge";
 import type { ExamWithPatient, Profile } from "@/lib/database.types";
-import { revertToDraft, saveLaudoContent, signLaudo } from "../actions";
+import {
+  revertToDraft,
+  saveExamAsTemplate,
+  saveLaudoContent,
+  signLaudo,
+} from "../actions";
 
 export function LaudoEditor({
   exam,
@@ -24,6 +30,10 @@ export function LaudoEditor({
   const [error, setError] = useState<string | null>(null);
   const [confirmUnlock, setConfirmUnlock] = useState(false);
   const [confirmSign, setConfirmSign] = useState(false);
+  const [promptSaveAsTemplate, setPromptSaveAsTemplate] = useState(false);
+  const [templateSavedMessage, setTemplateSavedMessage] = useState<
+    string | null
+  >(null);
 
   const isSigned = exam.status === "signed";
   const isAdmin = profile.role === "admin";
@@ -48,6 +58,23 @@ export function LaudoEditor({
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao reabrir laudo.");
+    }
+  }
+
+  async function handleSaveAsTemplate(name: string) {
+    setPromptSaveAsTemplate(false);
+    setError(null);
+    try {
+      if (dirty) {
+        await saveLaudoContent(exam.id, contentHtml);
+        setDirty(false);
+      }
+      await saveExamAsTemplate(exam.id, name);
+      setTemplateSavedMessage(`Modelo "${name}" salvo com sucesso.`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro ao salvar modelo.",
+      );
     }
   }
 
@@ -112,6 +139,14 @@ export function LaudoEditor({
           )}
           {!isSigned && isAdmin && (
             <button
+              onClick={() => setPromptSaveAsTemplate(true)}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-white"
+            >
+              Salvar como modelo
+            </button>
+          )}
+          {!isSigned && isAdmin && (
+            <button
               onClick={() => setConfirmSign(true)}
               disabled={signing}
               className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
@@ -138,9 +173,13 @@ export function LaudoEditor({
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {templateSavedMessage && (
+        <p className="no-print text-sm text-emerald-600">
+          {templateSavedMessage}
+        </p>
+      )}
 
       <LaudoShell
-        patient={exam.patient}
         exam={exam}
         body={
           <RichTextEditor
@@ -171,6 +210,16 @@ export function LaudoEditor({
         confirmLabel="Assinar"
         onConfirm={handleSign}
         onCancel={() => setConfirmSign(false)}
+      />
+
+      <PromptDialog
+        open={promptSaveAsTemplate}
+        title="Salvar como novo modelo"
+        description="O texto atual deste laudo vai virar um modelo padrão, disponível para qualquer paciente. Dê um nome para esse modelo."
+        placeholder='Ex: "Vigília e sono adulto"'
+        confirmLabel="Salvar modelo"
+        onConfirm={handleSaveAsTemplate}
+        onCancel={() => setPromptSaveAsTemplate(false)}
       />
     </div>
   );

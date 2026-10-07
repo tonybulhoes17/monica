@@ -43,6 +43,7 @@ export interface CreatePatientExamInput {
   requestingDoctor: string;
   comorbidities: string;
   medications: string;
+  institutionId: string | null;
 }
 
 export async function createPatientExam(
@@ -95,6 +96,7 @@ export async function createPatientExam(
       requesting_doctor: input.requestingDoctor,
       comorbidities: input.comorbidities || null,
       medications: input.medications || null,
+      institution_id: input.institutionId,
       status: "pending",
       created_by: profile.id,
     })

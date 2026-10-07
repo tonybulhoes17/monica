@@ -17,6 +17,7 @@ export function NavBar({ profile }: { profile: Profile }) {
       ? [
           { href: "/admin/secretarias", label: "Secretárias" },
           { href: "/admin/modelos", label: "Modelos de laudo" },
+          { href: "/admin/instituicoes", label: "Instituições" },
         ]
       : []),
   ];
@@ -29,7 +30,7 @@ export function NavBar({ profile }: { profile: Profile }) {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="no-print border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
           <span className="font-semibold text-slate-900">Laudos de EEG</span>
