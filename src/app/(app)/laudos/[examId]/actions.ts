@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin, requireProfile } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { mergeTemplatePlaceholders } from "@/lib/template";
 import { signDocument } from "@/lib/signing/vidas";
@@ -21,7 +21,7 @@ export async function startLaudoWithTemplate(
   examId: string,
   templateId: string,
 ) {
-  await requireProfile();
+  await requireAdmin();
   const supabase = await createClient();
 
   const exam = await loadExamWithPatient(examId);
@@ -57,7 +57,7 @@ export async function startLaudoWithTemplate(
 }
 
 export async function saveLaudoContent(examId: string, contentHtml: string) {
-  await requireProfile();
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -74,7 +74,7 @@ export async function saveLaudoContent(examId: string, contentHtml: string) {
  * histórico de versões, apenas a versão atual) e volta o status para "draft".
  */
 export async function revertToDraft(examId: string) {
-  await requireProfile();
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase

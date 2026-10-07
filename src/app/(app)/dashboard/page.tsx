@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { calculateAge } from "@/lib/age";
+import { requireProfile } from "@/lib/auth";
+import { formatAge } from "@/lib/age";
 import { DateSelector } from "./date-selector";
 import { StatusBadge } from "@/components/status-badge";
 
@@ -13,6 +14,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ date?: string }>;
 }) {
+  const profile = await requireProfile();
   const { date } = await searchParams;
   const selectedDate = date ?? todayIso();
 
@@ -48,18 +50,20 @@ export default async function DashboardPage({
                   {exam.patient.full_name}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {calculateAge(exam.patient.birth_date, exam.exam_date)} anos
+                  {formatAge(exam.patient.birth_date, exam.exam_date)}
                   {" · "}Solicitante: {exam.requesting_doctor}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <StatusBadge status={exam.status} />
-                <Link
-                  href={`/laudos/${exam.id}`}
-                  className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
-                >
-                  {exam.status === "signed" ? "Ver laudo" : "Fazer laudo"}
-                </Link>
+                {profile.role === "admin" && (
+                  <Link
+                    href={`/laudos/${exam.id}`}
+                    className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                  >
+                    {exam.status === "signed" ? "Ver laudo" : "Fazer laudo"}
+                  </Link>
+                )}
               </div>
             </li>
           ))}

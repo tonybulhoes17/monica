@@ -1,4 +1,4 @@
-import { calculateAge } from "@/lib/age";
+import { formatAge } from "@/lib/age";
 import type { Exam, Patient } from "@/lib/database.types";
 
 function formatDateBr(iso: string): string {
@@ -16,7 +16,7 @@ export function mergeTemplatePlaceholders(
 ): string {
   const replacements: Record<string, string> = {
     "{{nome_paciente}}": patient.full_name,
-    "{{idade}}": `${calculateAge(patient.birth_date, exam.exam_date)} anos`,
+    "{{idade}}": formatAge(patient.birth_date, exam.exam_date),
     "{{data_nascimento}}": formatDateBr(patient.birth_date),
     "{{data_exame}}": formatDateBr(exam.exam_date),
     "{{medico_solicitante}}": exam.requesting_doctor,

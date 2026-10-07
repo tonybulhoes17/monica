@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { requireProfile } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { calculateAge } from "@/lib/age";
+import { formatAge } from "@/lib/age";
 import { TemplatePicker } from "./template-picker";
 
 export default async function LaudoPage({
@@ -9,7 +9,7 @@ export default async function LaudoPage({
 }: {
   params: Promise<{ examId: string }>;
 }) {
-  await requireProfile();
+  await requireAdmin();
   const { examId } = await params;
   const supabase = await createClient();
 
@@ -38,7 +38,7 @@ export default async function LaudoPage({
           {exam.patient.full_name}
         </h1>
         <p className="text-sm text-slate-500">
-          {calculateAge(exam.patient.birth_date, exam.exam_date)} anos ·
+          {formatAge(exam.patient.birth_date, exam.exam_date)} ·
           Exame em {exam.exam_date.split("-").reverse().join("/")}
         </p>
       </div>

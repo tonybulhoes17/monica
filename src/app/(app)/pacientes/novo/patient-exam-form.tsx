@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCpf, isValidCpf, onlyDigits } from "@/lib/cpf";
-import { calculateAge } from "@/lib/age";
+import { formatAge } from "@/lib/age";
 import type { Institution } from "@/lib/database.types";
 import {
   createPatientExam,
@@ -57,8 +57,10 @@ export function PatientExamForm({
     };
   }, [cpf]);
 
-  const age =
-    birthDate && examDate ? calculateAge(birthDate, examDate) : null;
+  const ageLabel =
+    birthDate && examDate ? formatAge(birthDate, examDate) : null;
+
+  const MIN_BIRTH_DATE = "1900-01-01";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +68,13 @@ export function PatientExamForm({
 
     if (!isValidCpf(cpf)) {
       setError("CPF inválido.");
+      return;
+    }
+
+    if (birthDate < MIN_BIRTH_DATE || birthDate > examDate) {
+      setError(
+        "Data de nascimento inválida: precisa ser uma data real, anterior à data do exame.",
+      );
       return;
     }
 
@@ -132,6 +141,8 @@ export function PatientExamForm({
             required
             type="date"
             value={birthDate}
+            min={MIN_BIRTH_DATE}
+            max={examDate || todayIso()}
             onChange={(e) => setBirthDate(e.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
@@ -144,6 +155,7 @@ export function PatientExamForm({
             required
             type="date"
             value={examDate}
+            min={MIN_BIRTH_DATE}
             onChange={(e) => setExamDate(e.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
@@ -154,7 +166,7 @@ export function PatientExamForm({
           </label>
           <input
             disabled
-            value={age !== null ? `${age} anos` : ""}
+            value={ageLabel ?? ""}
             className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
           />
         </div>

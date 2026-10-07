@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { ExamWithPatient } from "@/lib/database.types";
-import { calculateAge } from "@/lib/age";
+import { formatAge } from "@/lib/age";
 
 function formatDateBr(iso: string): string {
   return iso.split("-").reverse().join("/");
@@ -66,7 +66,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
         </p>
         <p>
           <span className="font-bold">Idade:</span>{" "}
-          {calculateAge(patient.birth_date, exam.exam_date)} anos
+          {formatAge(patient.birth_date, exam.exam_date)}
         </p>
         <p className="col-span-2">
           <span className="font-bold">Solicitante</span>: {exam.requesting_doctor}
