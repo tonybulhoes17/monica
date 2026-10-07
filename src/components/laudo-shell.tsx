@@ -25,7 +25,7 @@ const SERVICE_LINES = [
   "VÍDEO- ELETROENCEFALOGRAMA (VÍDEO-EEG)",
 ];
 
-const TIMES_NEW_ROMAN = '"Times New Roman", Times, serif';
+const TIMES_NEW_ROMAN = '"Times New Roman", "Tinos", Times, serif';
 const DARK_BLUE = "#002060";
 
 export function LaudoShell({ exam, body }: LaudoShellProps) {
@@ -113,14 +113,14 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
           {/* O nome fica num bloco inline (largura = largura do próprio
               texto), para a assinatura poder ser centralizada exatamente
               sobre "Dra. Mônica Seixas" (não sobre a coluna inteira) e
-              sobrepor um pouco o texto, como uma assinatura física
-              escaneada por cima do nome impresso. */}
+              sobrepor nome + especialidade, como uma assinatura física
+              escaneada por cima do texto impresso. */}
           <div className="relative inline-block">
             <div
-              className="absolute h-16 w-40"
+              className="absolute h-20 w-40"
               style={{
                 left: "50%",
-                bottom: "-0.6rem",
+                bottom: "-1.8rem",
                 transform: "translateX(-50%)",
                 zIndex: 0,
               }}
@@ -137,7 +137,9 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
               {DOCTOR_NAME}
             </p>
           </div>
-          <p>{DOCTOR_SPECIALTY}</p>
+          <p className="relative" style={{ zIndex: 1 }}>
+            {DOCTOR_SPECIALTY}
+          </p>
           <p>{DOCTOR_REGISTRATION}</p>
         </div>
       </footer>
