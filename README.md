@@ -103,15 +103,18 @@ mostra "assinatura simulada" no rodapé do laudo. Quando as credenciais
      bucket de Storage para logos, coluna `exams.institution_id`)
    - `supabase/migrations/0003_seed_template_vigilia_sono_adulto.sql`
      (primeiro modelo de laudo pronto)
+   - `supabase/migrations/0004_seed_more_templates.sql` (mais 4 modelos)
 3. Em **Project Settings → API**, copie `URL`, `anon public key` e
-   `service_role key`.
-4. Crie o primeiro usuário admin (Dra. Monica): em **Authentication → Users**,
-   clique em "Add user", crie com e-mail/senha, depois rode no SQL Editor:
+   `service_role key` para o `.env.local` (ver passo 2 abaixo).
+4. Crie o primeiro usuário admin (Dra. Monica) com o script
+   `scripts/create-admin.mjs` (lê as chaves direto do `.env.local`, usa a
+   Admin API do Supabase — não precisa criar manualmente pelo painel):
 
-   ```sql
-   insert into public.profiles (id, full_name, role, crm, rqe)
-   values ('<uuid do usuário criado>', 'Monica Seixas', 'admin', 'CRMBA 28539', 'RQE 19407');
+   ```bash
+   node scripts/create-admin.mjs "email@exemplo.com" "senha-provisoria" "Monica Seixas" "CRMBA 28539" "RQE 19407"
    ```
+
+   Para criar outro admin depois, é só rodar de novo com outro e-mail/senha.
 
 ### 2. Variáveis de ambiente
 
