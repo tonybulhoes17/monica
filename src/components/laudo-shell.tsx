@@ -38,7 +38,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
 
   return (
     <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
-      <header className="flex items-end gap-4">
+      <header className="mb-3 flex items-end gap-4">
         <div
           className="relative shrink-0"
           style={{ width: "4.1cm", height: "2.1cm" }}
@@ -62,7 +62,7 @@ export function LaudoShell({ exam, body }: LaudoShellProps) {
       </header>
 
       <section
-        className="laudo-patient-box grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
+        className="laudo-patient-box mb-3 grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
         style={{
           fontFamily: TIMES_NEW_ROMAN,
           fontSize: "12pt",
