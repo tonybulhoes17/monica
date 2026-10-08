@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { formatAge } from "@/lib/age";
 import { DashboardFilters } from "./dashboard-filters";
+import { ALL_DATES } from "./constants";
 import { StatusBadge } from "@/components/status-badge";
 
 function todayIso() {
@@ -29,9 +30,12 @@ export default async function DashboardPage({
   let query = supabase
     .from("exams")
     .select("*, patient:patients!inner(*), institution:institutions(*)")
-    .eq("exam_date", selectedDate)
+    .order("exam_date", { ascending: false })
     .order("created_at", { ascending: true });
 
+  if (selectedDate !== ALL_DATES) {
+    query = query.eq("exam_date", selectedDate);
+  }
   if (nameFilter) {
     query = query.ilike("patient.full_name", `%${nameFilter}%`);
   }
@@ -71,6 +75,9 @@ export default async function DashboardPage({
                   {exam.patient.full_name}
                 </p>
                 <p className="text-xs text-slate-500">
+                  {selectedDate === ALL_DATES && (
+                    <>{exam.exam_date.split("-").reverse().join("/")} · </>
+                  )}
                   {formatAge(exam.patient.birth_date, exam.exam_date)}
                   {" · "}Solicitante: {exam.requesting_doctor}
                   {exam.institution && <> · {exam.institution.name}</>}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Institution } from "@/lib/database.types";
+import { ALL_DATES } from "./constants";
 
 function shiftDate(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00`);
@@ -16,6 +17,7 @@ export function DashboardFilters({
   institutionId,
   institutions,
 }: {
+  /** Data no formato YYYY-MM-DD, ou ALL_DATES quando o filtro foi limpo. */
   selectedDate: string;
   name: string;
   institutionId: string;
@@ -24,6 +26,7 @@ export function DashboardFilters({
   const router = useRouter();
   const [nameInput, setNameInput] = useState(name);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAllDates = selectedDate === ALL_DATES;
 
   function navigate(next: {
     date?: string;
@@ -57,24 +60,36 @@ export function DashboardFilters({
       <div className="flex items-center gap-2">
         <button
           onClick={() => navigate({ date: shiftDate(selectedDate, -1) })}
-          className="rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-white"
+          disabled={isAllDates}
+          className="rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-white disabled:opacity-40"
           aria-label="Dia anterior"
         >
           ←
         </button>
         <input
           type="date"
-          value={selectedDate}
+          value={isAllDates ? "" : selectedDate}
           onChange={(e) => navigate({ date: e.target.value })}
           className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
         />
         <button
           onClick={() => navigate({ date: shiftDate(selectedDate, 1) })}
-          className="rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-white"
+          disabled={isAllDates}
+          className="rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-white disabled:opacity-40"
           aria-label="Próximo dia"
         >
           →
         </button>
+        {isAllDates ? (
+          <span className="text-xs text-slate-500">Todas as datas</span>
+        ) : (
+          <button
+            onClick={() => navigate({ date: ALL_DATES })}
+            className="text-xs text-slate-500 underline hover:text-slate-700"
+          >
+            Limpar data
+          </button>
+        )}
       </div>
       <input
         type="text"
