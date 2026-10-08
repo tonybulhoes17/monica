@@ -18,8 +18,13 @@ de laudos de eletroencefalograma. Stack: Next.js (App Router) + Supabase
    **instituição** onde o exame foi feito (define a logo do cabeçalho). Busca
    automática por CPF se o paciente já tiver exames anteriores — todos os
    exames de todas as vezes ficam registrados, vinculados ao mesmo paciente.
-2. No **Painel**, Dra. Monica vê a lista de eletros do dia (com seletor de
-   data) e clica em **Fazer laudo**.
+2. No **Painel**, qualquer usuário (admin ou secretária) vê a lista de
+   eletros do dia, com filtro por data, por nome do paciente e por
+   instituição. Dra. Monica clica em **Fazer laudo**; qualquer um dos dois
+   papéis pode clicar em **Editar ficha** para corrigir dados de cadastro
+   lançados errado (nome, CPF, datas, instituição, solicitante,
+   comorbidades/medicações) — bloqueado para exames já assinados, para não
+   divergir do PDF já assinado.
 3. Escolhe um modelo pré-cadastrado → o texto do modelo entra em formulário
    editável (negrito, itálico, sublinhado, títulos, listas, alinhamento),
    dentro do mesmo layout do documento final (cabeçalho com logo, caixa de
@@ -28,6 +33,10 @@ de laudos de eletroencefalograma. Stack: Next.js (App Router) + Supabase
    laudo assinado mostra um aviso e, ao confirmar, remove a assinatura e volta
    o status para "em edição" — **não há histórico de versões anteriores**,
    apenas a versão atual (decisão do produto).
+5. Na tela de **Fazer laudo**, Dra. Monica também pode corrigir a
+   **instituição** do exame direto ali (select no topo, admin-only) — útil
+   quando a secretária selecionou o local errado no lançamento. Bloqueado
+   também para laudos já assinados.
 5. Botões **Imprimir** (abre a visualização e chama a impressão do navegador)
    e **Baixar PDF** (gera PDF no servidor, idêntico ao layout da tela) sempre
    disponíveis.

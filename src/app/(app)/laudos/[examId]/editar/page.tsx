@@ -29,6 +29,11 @@ export default async function EditarLaudoPage({
     ? await getActiveVidasSession(profile.id)
     : null;
 
+  const { data: institutions } = await supabase
+    .from("institutions")
+    .select("*")
+    .order("name");
+
   const isRealVidasSignature =
     exam.status === "signed" &&
     (exam.signature_payload as { provider?: string } | null)?.provider === "vidas";
@@ -41,6 +46,7 @@ export default async function EditarLaudoPage({
       exam={exam}
       profile={profile}
       qrCodeDataUrl={qrCodeDataUrl}
+      institutions={institutions ?? []}
       vidasStatus={{
         configured: vidasConfigured,
         connected: Boolean(vidasSession),

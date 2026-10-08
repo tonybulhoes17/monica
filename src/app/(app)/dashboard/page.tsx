@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { formatAge } from "@/lib/age";
-import { DateSelector } from "./date-selector";
+import { DashboardFilters } from "./dashboard-filters";
 import { StatusBadge } from "@/components/status-badge";
 
 function todayIso() {
@@ -12,31 +12,52 @@ function todayIso() {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; name?: string; institution?: string }>;
 }) {
   const profile = await requireProfile();
-  const { date } = await searchParams;
+  const { date, name, institution } = await searchParams;
   const selectedDate = date ?? todayIso();
+  const nameFilter = name ?? "";
+  const institutionFilter = institution ?? "";
 
   const supabase = await createClient();
-  const { data: exams } = await supabase
+  const { data: institutions } = await supabase
+    .from("institutions")
+    .select("*")
+    .order("name");
+
+  let query = supabase
     .from("exams")
-    .select("*, patient:patients(*)")
+    .select("*, patient:patients!inner(*), institution:institutions(*)")
     .eq("exam_date", selectedDate)
     .order("created_at", { ascending: true });
 
+  if (nameFilter) {
+    query = query.ilike("patient.full_name", `%${nameFilter}%`);
+  }
+  if (institutionFilter) {
+    query = query.eq("institution_id", institutionFilter);
+  }
+
+  const { data: exams } = await query;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-slate-900">
           Eletros do dia
         </h1>
-        <DateSelector selectedDate={selectedDate} />
+        <DashboardFilters
+          selectedDate={selectedDate}
+          name={nameFilter}
+          institutionId={institutionFilter}
+          institutions={institutions ?? []}
+        />
       </div>
 
       {!exams || exams.length === 0 ? (
         <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-          Nenhum exame lançado para esta data.
+          Nenhum exame encontrado para esses filtros.
         </p>
       ) : (
         <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
@@ -52,10 +73,17 @@ export default async function DashboardPage({
                 <p className="text-xs text-slate-500">
                   {formatAge(exam.patient.birth_date, exam.exam_date)}
                   {" · "}Solicitante: {exam.requesting_doctor}
+                  {exam.institution && <> · {exam.institution.name}</>}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <StatusBadge status={exam.status} />
+                <Link
+                  href={`/pacientes/${exam.id}/editar`}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Editar ficha
+                </Link>
                 {profile.role === "admin" && (
                   <Link
                     href={`/laudos/${exam.id}`}

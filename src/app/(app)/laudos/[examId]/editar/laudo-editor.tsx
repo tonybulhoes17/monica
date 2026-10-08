@@ -7,12 +7,13 @@ import { LaudoShell } from "@/components/laudo-shell";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PromptDialog } from "@/components/prompt-dialog";
 import { StatusBadge } from "@/components/status-badge";
-import type { ExamWithPatient, Profile } from "@/lib/database.types";
+import type { ExamWithPatient, Institution, Profile } from "@/lib/database.types";
 import {
   revertToDraft,
   saveExamAsTemplate,
   saveLaudoContent,
   signLaudo,
+  updateExamInstitution,
 } from "../actions";
 
 export interface VidasStatus {
@@ -26,11 +27,13 @@ export function LaudoEditor({
   profile,
   vidasStatus,
   qrCodeDataUrl,
+  institutions,
 }: {
   exam: ExamWithPatient;
   profile: Profile;
   vidasStatus: VidasStatus;
   qrCodeDataUrl?: string | null;
+  institutions: Institution[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,9 +50,32 @@ export function LaudoEditor({
   const [templateSavedMessage, setTemplateSavedMessage] = useState<
     string | null
   >(null);
+  const [institutionId, setInstitutionId] = useState(
+    exam.institution_id ?? "",
+  );
+  const [savingInstitution, setSavingInstitution] = useState(false);
+  const [institutionError, setInstitutionError] = useState<string | null>(
+    null,
+  );
 
   const isSigned = exam.status === "signed";
   const isAdmin = profile.role === "admin";
+
+  async function handleInstitutionChange(value: string) {
+    setInstitutionId(value);
+    setSavingInstitution(true);
+    setInstitutionError(null);
+    try {
+      await updateExamInstitution(exam.id, value || null);
+      router.refresh();
+    } catch (err) {
+      setInstitutionError(
+        err instanceof Error ? err.message : "Erro ao trocar instituição.",
+      );
+    } finally {
+      setSavingInstitution(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -181,6 +207,37 @@ export function LaudoEditor({
           )}
         </div>
       </div>
+
+      {isAdmin && (
+        <div className="no-print flex items-center gap-2 text-xs text-slate-600">
+          <label htmlFor="institution-select" className="font-medium">
+            Instituição (local do exame):
+          </label>
+          <select
+            id="institution-select"
+            value={institutionId}
+            disabled={isSigned || savingInstitution}
+            onChange={(e) => handleInstitutionChange(e.target.value)}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-50"
+          >
+            <option value="">Nenhuma</option>
+            {institutions.map((inst) => (
+              <option key={inst.id} value={inst.id}>
+                {inst.name}
+              </option>
+            ))}
+          </select>
+          {savingInstitution && <span>Salvando...</span>}
+          {isSigned && (
+            <span>
+              Laudo assinado — reabra para edição para trocar a instituição.
+            </span>
+          )}
+          {institutionError && (
+            <span className="text-red-600">{institutionError}</span>
+          )}
+        </div>
+      )}
 
       {vidasStatus.configured && !isSigned && (
         <div className="no-print flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">

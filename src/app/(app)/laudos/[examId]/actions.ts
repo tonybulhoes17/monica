@@ -79,6 +79,40 @@ export async function startLaudoWithTemplate(
   redirect(`/laudos/${examId}/editar`);
 }
 
+/**
+ * Corrige a instituição (local do exame) atribuída a um laudo — a
+ * secretária pode ter selecionado o local errado no lançamento. Bloqueado
+ * para laudos já assinados (a logo da instituição já está impressa no PDF
+ * assinado; corrigir ali exigiria reabrir o laudo primeiro).
+ */
+export async function updateExamInstitution(
+  examId: string,
+  institutionId: string | null,
+) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: exam } = await supabase
+    .from("exams")
+    .select("status")
+    .eq("id", examId)
+    .single();
+  if (!exam) throw new Error("Exame não encontrado.");
+  if (exam.status === "signed") {
+    throw new Error(
+      "Este laudo já está assinado. Reabra para edição antes de trocar a instituição.",
+    );
+  }
+
+  const { error } = await supabase
+    .from("exams")
+    .update({ institution_id: institutionId, updated_at: new Date().toISOString() })
+    .eq("id", examId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/laudos/${examId}/editar`);
+}
+
 export async function saveLaudoContent(examId: string, contentHtml: string) {
   await requireAdmin();
   const supabase = await createClient();
