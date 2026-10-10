@@ -53,16 +53,10 @@ export async function GET(
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .toLowerCase()}.pdf`;
 
-  // ?inline=1 (usado pelo botão "Imprimir") abre o PDF no visualizador do
-  // navegador em vez de forçar o download — o botão de imprimir do próprio
-  // visualizador já manda o PDF certinho (com o cabeçalho repetido em toda
-  // página) pra impressora, sem precisar de uma rota HTML separada.
-  const inline = request.nextUrl.searchParams.get("inline") === "1";
-
   return new NextResponse(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${fileName}"`,
+      "Content-Disposition": `attachment; filename="${fileName}"`,
     },
   });
 }

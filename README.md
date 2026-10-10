@@ -222,21 +222,33 @@ https://github.com/Sparticuz/chromium/releases.
 
 **Cabeçalho repetido em toda página do PDF:** quando o laudo ocupa mais de
 uma página (ex. o modelo "Vídeo-EEG Normal"), o cabeçalho (logo + caixa de
-dados do paciente + título) aparece de novo no topo da 2ª página em diante,
-igual à 1ª — ver `buildHeaderTemplate()` em `src/lib/pdf.ts`. Isso usa o
-`headerTemplate`/`margin.top` nativos do `page.pdf()` do Puppeteer, não CSS
-(`position: fixed` dentro de `@media print` foi tentado primeiro e descartado
-— o Chromium usado pelo Puppeteer não repetiu o elemento de forma confiável
-entre páginas). Como o cabeçalho do PDF é montado como uma string HTML à
-parte (função isolada do Puppeteer, sem acesso aos componentes React da
-página), ele precisa ser mantido manualmente em sincronia com o cabeçalho
-real renderizado em `src/components/laudo-shell.tsx` se o design mudar.
-Por causa disso, o botão **Imprimir** não abre mais `/laudos/[id]/imprimir`
-num print nativo do navegador — ele abre o PDF gerado
-(`/api/laudos/[id]/pdf?inline=1`) no visualizador do próprio navegador, que
-já tem o cabeçalho repetido corretamente e um botão de imprimir embutido.
-A rota `/laudos/[id]/imprimir` continua existindo só como a página que o
-Puppeteer renderiza internamente (`?pdf=1`) para virar PDF.
+dados do paciente + título) pode aparecer de novo no topo da 2ª página em
+diante, igual à 1ª. Duas abordagens "automáticas" foram tentadas e
+descartadas antes desta:
+- CSS puro (`.laudo-print-header { position: fixed }` dentro de
+  `@media print`): o Chromium usado pelo Puppeteer não repetiu o elemento
+  de forma confiável entre páginas.
+- `page.pdf({ displayHeaderFooter: true, headerTemplate })` nativo do
+  Puppeteer: funcionou perfeitamente local, mas quebrou em produção — o
+  binário que `@sparticuz/chromium-min` baixa é o "chrome-headless-shell",
+  que tem um bug confirmado do próprio Puppeteer em que header/footer
+  templates não funcionam de forma confiável no Linux (ver
+  https://github.com/puppeteer/puppeteer/issues/12196).
+
+A solução final não depende de nenhum recurso avançado/instável de
+impressão: um modelo de laudo pode conter o marcador
+`<!--quebra-de-pagina-->` (ver `src/lib/content-html.ts`) no meio do
+`content_html`, no ponto onde a 2ª página deve começar. A página de
+impressão (`src/app/(print)/laudos/[examId]/imprimir/page.tsx`) separa o
+conteúdo nesse marcador e, para cada trecho depois do primeiro, repete o
+cabeçalho de verdade (componente `LaudoHeaderBlock`, exportado de
+`src/components/laudo-shell.tsx` — o mesmo usado na 1ª página, então nunca
+sai dessincronizado visualmente) dentro de um `<div className="laudo-page-break">`,
+que força a quebra de página via `break-before: page` (CSS padrão, suportado
+de forma confiável em qualquer motor de impressão). O marcador não é
+detectado automaticamente — precisa ser inserido manualmente no texto do
+modelo, no ponto certo, como foi feito no modelo "Vídeo-EEG Normal"
+(`supabase/migrations/0010_seed_template_video_eeg_normal.sql`).
 
 ## Estrutura
 

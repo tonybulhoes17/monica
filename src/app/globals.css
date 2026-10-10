@@ -149,4 +149,14 @@ body {
   .no-print {
     display: none !important;
   }
+  /* Força o início de uma nova página impressa aqui — usado para repetir o
+     cabeçalho (logo + caixa de dados + título) em laudos longos que têm um
+     marcador de quebra de página no meio do texto. break-before/page-break-
+     before são as duas grafias da mesma propriedade CSS (a segunda é o
+     alias legado, mantido por compatibilidade com motores de impressão
+     mais antigos/alternativos). */
+  .laudo-page-break {
+    break-before: page;
+    page-break-before: always;
+  }
 }

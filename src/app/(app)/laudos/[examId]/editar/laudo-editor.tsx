@@ -166,7 +166,7 @@ export function LaudoEditor({
 
         <div className="no-print flex items-center gap-2">
           <a
-            href={`/api/laudos/${exam.id}/pdf?inline=1`}
+            href={`/laudos/${exam.id}/imprimir`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-white"

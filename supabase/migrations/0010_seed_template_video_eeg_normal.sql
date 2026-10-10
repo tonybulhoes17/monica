@@ -6,6 +6,11 @@
 -- específicos do paciente de exemplo (medicação em uso, horário exato do
 -- registro, ano de início das crises) foram removidos do texto-base, como
 -- nos demais modelos, para não virar um padrão incorreto.
+--
+-- Contém o marcador <!--quebra-de-pagina--> logo antes de "Principais
+-- achados clínicos", no mesmo ponto em que o laudo de exemplo (2 páginas)
+-- quebra para a 2ª folha — repete o cabeçalho (logo + caixa de dados +
+-- título) ali, igual ao original (ver src/lib/content-html.ts).
 
 insert into public.report_templates (name, content_html)
 values (
@@ -21,6 +26,7 @@ values (
 <p>A fotoestimulação intermitente não evocou anormalidades.</p>
 <p><strong>Atividade interictal:</strong></p>
 <p>Ausência de atividade paroxística de caráter epileptiforme.</p>
+<!--quebra-de-pagina-->
 <p style="margin-top: 1.5rem;"><strong>Principais achados clínicos:</strong></p>
 <p>Durante o período de registro não foram evidenciadas manifestações clínicas.</p>
 <p><strong>Conclusão:</strong></p>
