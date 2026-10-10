@@ -19,10 +19,13 @@ de laudos de eletroencefalograma. Stack: Next.js (App Router) + Supabase
    automática por CPF se o paciente já tiver exames anteriores — todos os
    exames de todas as vezes ficam registrados, vinculados ao mesmo paciente.
 2. No **Painel**, qualquer usuário (admin ou secretária) vê a lista de
-   eletros do dia, com filtro por data, por nome do paciente e por
-   instituição. Dra. Monica clica em **Fazer laudo**; qualquer um dos dois
-   papéis pode clicar em **Editar ficha** para corrigir dados de cadastro
-   lançados errado (nome, CPF, datas, instituição, solicitante,
+   eletros, com filtros por status (Pendentes/Todos — a visão padrão ao
+   entrar é "Pendentes" com a data limpa, ou seja, todos os exames ainda não
+   assinados, de qualquer data), por data, por nome do paciente e por
+   instituição; todos os filtros podem ser combinados livremente. Dra.
+   Monica clica em **Fazer laudo**; qualquer um dos dois papéis pode clicar
+   em **Editar ficha** para corrigir dados de cadastro lançados errado
+   (nome, CPF, datas, instituição, solicitante,
    comorbidades/medicações) — bloqueado para exames já assinados, para não
    divergir do PDF já assinado.
 3. Escolhe um modelo pré-cadastrado → o texto do modelo entra em formulário
@@ -46,13 +49,17 @@ de laudos de eletroencefalograma. Stack: Next.js (App Router) + Supabase
 
 ## Modelos de laudo
 
-Já vem com o primeiro modelo real cadastrado via seed
-(`supabase/migrations/0003_seed_template_vigilia_sono_adulto.sql`): **Vigília
-e Sono Adulto**, baseado no exemplo enviado pela Dra. Monica. O corpo do
-modelo contém só o texto clínico (título, condições técnicas, achados,
-conclusão, impressão) — nome/idade/datas/solicitante **não** entram no texto
-do modelo porque já são preenchidos automaticamente a partir do cadastro do
-exame, na caixa de dados do paciente (ver `src/components/laudo-shell.tsx`).
+Já vem com modelos reais cadastrados via seed, baseados em exemplos enviados
+pela Dra. Monica (0003/0004/0010) — **Vigília e Sono Adulto**, **Vigília e
+Sonolência Adulto**, **Vigília Normal - Criança**, **Sono Espontâneo Normal -
+Lactente**, **Vigília e Sono - Epilepsia Generalizada Idiopática (exemplo
+anormal)** e **Vídeo-EEG Normal** (exame de monitorização prolongada, por
+isso o texto é mais longo e normalmente ocupa 2 páginas — a paginação do PDF
+é automática, sem altura forçada por página). O corpo de cada modelo contém
+só o texto clínico (título, condições técnicas, achados, conclusão,
+impressão) — nome/idade/datas/solicitante **não** entram no texto do modelo
+porque já são preenchidos automaticamente a partir do cadastro do exame, na
+caixa de dados do paciente (ver `src/components/laudo-shell.tsx`).
 
 Se quiser cadastrar manualmente outros modelos com marcadores, também há
 suporte a `{{nome_paciente}}`, `{{idade}}`, `{{data_nascimento}}`,
@@ -167,6 +174,8 @@ dela mantêm os bytes originais no bucket `signed-laudos`.
    - `supabase/migrations/0009_vidas_integration.sql` (tabela
      `vidas_sessions`, coluna `exams.signed_pdf_path`, bucket privado
      `signed-laudos`)
+   - `supabase/migrations/0010_seed_template_video_eeg_normal.sql` (modelo
+     **Vídeo-EEG Normal**)
 3. Em **Project Settings → API**, copie `URL`, `anon public key` e
    `service_role key` para o `.env.local` (ver passo 2 abaixo).
 4. Crie o primeiro usuário admin (Dra. Monica) com o script

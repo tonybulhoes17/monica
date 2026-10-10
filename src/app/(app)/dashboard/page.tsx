@@ -3,23 +3,27 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { formatAge } from "@/lib/age";
 import { DashboardFilters } from "./dashboard-filters";
-import { ALL_DATES } from "./constants";
+import { ALL_DATES, STATUS_PENDING } from "./constants";
 import { StatusBadge } from "@/components/status-badge";
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; name?: string; institution?: string }>;
+  searchParams: Promise<{
+    date?: string;
+    name?: string;
+    institution?: string;
+    status?: string;
+  }>;
 }) {
   const profile = await requireProfile();
-  const { date, name, institution } = await searchParams;
-  const selectedDate = date ?? todayIso();
+  const { date, name, institution, status } = await searchParams;
+  // Visão padrão (sem filtros na URL): data limpa + só laudos pendentes. O
+  // usuário pode depois trocar qualquer filtro livremente.
+  const selectedDate = date ?? ALL_DATES;
   const nameFilter = name ?? "";
   const institutionFilter = institution ?? "";
+  const statusFilter = status ?? STATUS_PENDING;
 
   const supabase = await createClient();
   const { data: institutions } = await supabase
@@ -36,6 +40,9 @@ export default async function DashboardPage({
   if (selectedDate !== ALL_DATES) {
     query = query.eq("exam_date", selectedDate);
   }
+  if (statusFilter === STATUS_PENDING) {
+    query = query.neq("status", "signed");
+  }
   if (nameFilter) {
     query = query.ilike("patient.full_name", `%${nameFilter}%`);
   }
@@ -48,27 +55,26 @@ export default async function DashboardPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-slate-900">
-          Eletros do dia
-        </h1>
+        <h1 className="text-xl font-semibold text-slate-900">Eletros</h1>
         <DashboardFilters
           selectedDate={selectedDate}
           name={nameFilter}
           institutionId={institutionFilter}
+          status={statusFilter}
           institutions={institutions ?? []}
         />
       </div>
 
       {!exams || exams.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+        <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
           Nenhum exame encontrado para esses filtros.
         </p>
       ) : (
-        <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+        <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           {exams.map((exam) => (
             <li
               key={exam.id}
-              className="flex items-center justify-between gap-4 px-4 py-3"
+              className="flex items-center justify-between gap-4 px-4 py-3.5 transition-colors hover:bg-slate-50/60"
             >
               <div>
                 <p className="font-medium text-slate-900">
@@ -83,18 +89,18 @@ export default async function DashboardPage({
                   {exam.institution && <> · {exam.institution.name}</>}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <StatusBadge status={exam.status} />
                 <Link
                   href={`/pacientes/${exam.id}/editar`}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
                 >
                   Editar ficha
                 </Link>
                 {profile.role === "admin" && (
                   <Link
                     href={`/laudos/${exam.id}`}
-                    className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                    className="rounded-full bg-[#002060] px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:bg-[#001845] hover:shadow"
                   >
                     {exam.status === "signed" ? "Ver laudo" : "Fazer laudo"}
                   </Link>
