@@ -168,12 +168,27 @@ export async function renderExamPdf(
   if (isServerless) {
     const puppeteerCore = await import("puppeteer-core");
     const chromium = (await import("@sparticuz/chromium-min")).default;
+    // Segue exatamente o padrão de uso documentado pelo @sparticuz/chromium
+    // (args passados por puppeteer.defaultArgs(), headless: "shell" e um
+    // defaultViewport explícito) — sem isso, o layout de impressão
+    // (headerTemplate/margin do page.pdf()) saiu quebrado em produção.
     browser = await puppeteerCore.launch({
-      args: chromium.args,
+      args: await puppeteerCore.defaultArgs({
+        args: chromium.args,
+        headless: "shell",
+      }),
+      defaultViewport: {
+        width: 1920,
+        height: 1080,
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+        isLandscape: true,
+      },
       executablePath: await chromium.executablePath(
         `https://github.com/Sparticuz/chromium/releases/download/v${CHROMIUM_PACK_VERSION}/chromium-v${CHROMIUM_PACK_VERSION}-pack.x64.tar`,
       ),
-      headless: true,
+      headless: "shell",
     });
   } else {
     const puppeteer = await import("puppeteer");
