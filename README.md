@@ -220,6 +220,24 @@ completo em desenvolvimento local. Se a versão do pacote
 `src/lib/pdf.ts` ainda aponta para uma release compatível em
 https://github.com/Sparticuz/chromium/releases.
 
+**Cabeçalho repetido em toda página do PDF:** quando o laudo ocupa mais de
+uma página (ex. o modelo "Vídeo-EEG Normal"), o cabeçalho (logo + caixa de
+dados do paciente + título) aparece de novo no topo da 2ª página em diante,
+igual à 1ª — ver `buildHeaderTemplate()` em `src/lib/pdf.ts`. Isso usa o
+`headerTemplate`/`margin.top` nativos do `page.pdf()` do Puppeteer, não CSS
+(`position: fixed` dentro de `@media print` foi tentado primeiro e descartado
+— o Chromium usado pelo Puppeteer não repetiu o elemento de forma confiável
+entre páginas). Como o cabeçalho do PDF é montado como uma string HTML à
+parte (função isolada do Puppeteer, sem acesso aos componentes React da
+página), ele precisa ser mantido manualmente em sincronia com o cabeçalho
+real renderizado em `src/components/laudo-shell.tsx` se o design mudar.
+Por causa disso, o botão **Imprimir** não abre mais `/laudos/[id]/imprimir`
+num print nativo do navegador — ele abre o PDF gerado
+(`/api/laudos/[id]/pdf?inline=1`) no visualizador do próprio navegador, que
+já tem o cabeçalho repetido corretamente e um botão de imprimir embutido.
+A rota `/laudos/[id]/imprimir` continua existindo só como a página que o
+Puppeteer renderiza internamente (`?pdf=1`) para virar PDF.
+
 ## Estrutura
 
 ```

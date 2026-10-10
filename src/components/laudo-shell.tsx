@@ -11,6 +11,14 @@ interface LaudoShellProps {
   body: React.ReactNode;
   /** Data URL (PNG) do QR code de validação — só é usado quando o laudo tem assinatura real do Vidas. */
   qrCodeDataUrl?: string | null;
+  /**
+   * Omite o cabeçalho (logo + caixa de dados do paciente) daqui — usado
+   * apenas na renderização para o Puppeteer (`?pdf=1`), onde o cabeçalho
+   * já é injetado separadamente pelo `headerTemplate` do `page.pdf()`
+   * (ver src/lib/pdf.ts) e se repete sozinho em toda página gerada.
+   * Renderizá-lo aqui também duplicaria o cabeçalho na 1ª página.
+   */
+  hideHeader?: boolean;
 }
 
 const DOCTOR_NAME = "Dra. Mônica Seixas";
@@ -93,7 +101,12 @@ function SignatureNameBlock() {
   );
 }
 
-export function LaudoShell({ exam, body, qrCodeDataUrl }: LaudoShellProps) {
+export function LaudoShell({
+  exam,
+  body,
+  qrCodeDataUrl,
+  hideHeader,
+}: LaudoShellProps) {
   const { patient, institution } = exam;
   const isSigned = exam.status === "signed";
   const signature = exam.signature_payload as
@@ -115,57 +128,61 @@ export function LaudoShell({ exam, body, qrCodeDataUrl }: LaudoShellProps) {
 
   return (
     <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
-      <header className="mb-3 flex items-end gap-4">
-        <div
-          className="relative shrink-0"
-          style={{ width: "4.1cm", height: "2.1cm" }}
-        >
-          <Image
-            src={logoUrl}
-            alt={institution?.name ?? "Logo"}
-            fill
-            className="object-contain"
-            unoptimized
-          />
-        </div>
-        <div
-          className="leading-tight text-slate-900"
-          style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "12pt", fontWeight: 700 }}
-        >
-          {SERVICE_LINES.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-        </div>
-      </header>
+      {!hideHeader && (
+        <>
+          <header className="mb-3 flex items-end gap-4">
+            <div
+              className="relative shrink-0"
+              style={{ width: "4.8cm", height: "2.4cm" }}
+            >
+              <Image
+                src={logoUrl}
+                alt={institution?.name ?? "Logo"}
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+            <div
+              className="leading-tight text-slate-900"
+              style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "12pt", fontWeight: 700 }}
+            >
+              {SERVICE_LINES.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          </header>
 
-      <section
-        className="laudo-patient-box mb-3 grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
-        style={{
-          fontFamily: TIMES_NEW_ROMAN,
-          fontSize: "12pt",
-          fontWeight: 400,
-          border: `2.25pt solid ${DARK_BLUE}`,
-        }}
-      >
-        <p>
-          <span className="font-bold">Nome</span>: {patient.full_name}
-        </p>
-        <p>
-          <span className="font-bold">Data do exame</span>:{" "}
-          {formatDateBr(exam.exam_date)}
-        </p>
-        <p>
-          <span className="font-bold">Data de Nascimento</span>:{" "}
-          {formatDateBr(patient.birth_date)}
-        </p>
-        <p>
-          <span className="font-bold">Idade</span>:{" "}
-          {formatAge(patient.birth_date, exam.exam_date)}
-        </p>
-        <p className="col-span-2">
-          <span className="font-bold">Solicitante</span>: {exam.requesting_doctor}
-        </p>
-      </section>
+          <section
+            className="laudo-patient-box mb-3 grid grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-slate-900"
+            style={{
+              fontFamily: TIMES_NEW_ROMAN,
+              fontSize: "12pt",
+              fontWeight: 400,
+              border: `2.25pt solid ${DARK_BLUE}`,
+            }}
+          >
+            <p>
+              <span className="font-bold">Nome</span>: {patient.full_name}
+            </p>
+            <p>
+              <span className="font-bold">Data do exame</span>:{" "}
+              {formatDateBr(exam.exam_date)}
+            </p>
+            <p>
+              <span className="font-bold">Data de Nascimento</span>:{" "}
+              {formatDateBr(patient.birth_date)}
+            </p>
+            <p>
+              <span className="font-bold">Idade</span>:{" "}
+              {formatAge(patient.birth_date, exam.exam_date)}
+            </p>
+            <p className="col-span-2">
+              <span className="font-bold">Solicitante</span>: {exam.requesting_doctor}
+            </p>
+          </section>
+        </>
+      )}
 
       <section className="no-print mt-4 mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
         <span className="font-semibold">
