@@ -261,6 +261,15 @@ export function LaudoShell({ exam, body, qrCodeDataUrl }: LaudoShellProps) {
           <SignatureNameBlock />
         </footer>
       )}
+
+      {exam.institution?.address && (
+        <p
+          className="mt-4 text-center text-slate-400"
+          style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "8pt" }}
+        >
+          {exam.institution.address}
+        </p>
+      )}
     </div>
   );
 }

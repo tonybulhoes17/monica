@@ -1,7 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { NewInstitutionForm } from "./new-institution-form";
+import { InstitutionForm } from "./institution-form";
+import { DeleteInstitutionButton } from "./delete-institution-button";
 
 export default async function InstituicoesPage() {
   await requireAdmin();
@@ -15,8 +17,9 @@ export default async function InstituicoesPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold text-slate-900">Instituições</h1>
       <p className="text-sm text-slate-500">
-        A logo de cada instituição aparece no cabeçalho do laudo, conforme o
-        local selecionado no cadastro do exame.
+        A logo de cada instituição aparece no cabeçalho do laudo, e o
+        endereço no rodapé, conforme o local selecionado no cadastro do
+        exame.
       </p>
 
       <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
@@ -34,9 +37,23 @@ export default async function InstituicoesPage() {
                   />
                 )}
               </div>
-              <span className="text-sm font-medium text-slate-900">
-                {inst.name}
-              </span>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-900">
+                  {inst.name}
+                </p>
+                {inst.address && (
+                  <p className="text-xs text-slate-500">{inst.address}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/admin/instituicoes/${inst.id}`}
+                  className="text-sm text-slate-600 hover:text-slate-900 hover:underline"
+                >
+                  Editar
+                </Link>
+                <DeleteInstitutionButton id={inst.id} name={inst.name} />
+              </div>
             </li>
           ))
         ) : (
@@ -50,7 +67,7 @@ export default async function InstituicoesPage() {
         <h2 className="mb-4 text-sm font-semibold text-slate-900">
           Nova instituição
         </h2>
-        <NewInstitutionForm />
+        <InstitutionForm />
       </div>
     </div>
   );

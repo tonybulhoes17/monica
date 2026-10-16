@@ -76,8 +76,13 @@ não foram transformados em modelos; avisar se for para cadastrá-los também.
 ## Instituições
 
 Cada instituição (`admin/instituicoes`) tem nome + logo (upload direto para o
-Storage do Supabase, bucket público `institution-logos`). A logo escolhida no
-cadastro do exame aparece no cabeçalho do laudo daquele exame. Existe uma
+Storage do Supabase, bucket público `institution-logos`) + endereço (texto
+livre, opcional). A logo escolhida no cadastro do exame aparece no cabeçalho
+do laudo; o endereço aparece pequeno e discreto no rodapé, abaixo da
+assinatura. Dá para editar (inclusive trocar a logo — basta escolher um
+arquivo novo; deixar em branco mantém a atual) e excluir uma instituição.
+Excluir não apaga os exames já vinculados a ela — a FK é `on delete set
+null` (migração 0011), então eles só ficam "sem instituição". Existe uma
 instituição padrão pré-cadastrada ("Dra. Monica Seixas") usando a logo local
 em `public/branding/logo.png`.
 
@@ -176,6 +181,9 @@ dela mantêm os bytes originais no bucket `signed-laudos`.
      `signed-laudos`)
    - `supabase/migrations/0010_seed_template_video_eeg_normal.sql` (modelo
      **Vídeo-EEG Normal**)
+   - `supabase/migrations/0011_institution_address_and_delete.sql` (coluna
+     `institutions.address`; `exams.institution_id` passa a `on delete set
+     null`, pra permitir excluir instituição)
 3. Em **Project Settings → API**, copie `URL`, `anon public key` e
    `service_role key` para o `.env.local` (ver passo 2 abaixo).
 4. Crie o primeiro usuário admin (Dra. Monica) com o script
