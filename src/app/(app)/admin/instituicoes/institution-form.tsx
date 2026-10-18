@@ -15,6 +15,9 @@ export function InstitutionForm({
   const router = useRouter();
   const [name, setName] = useState(institution?.name ?? "");
   const [address, setAddress] = useState(institution?.address ?? "");
+  const [headerLines, setHeaderLines] = useState(
+    institution?.header_lines ?? "",
+  );
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,12 +49,18 @@ export function InstitutionForm({
       }
 
       if (institution) {
-        await updateInstitution(institution.id, { name, address, logoUrl });
+        await updateInstitution(institution.id, {
+          name,
+          address,
+          headerLines,
+          logoUrl,
+        });
         setSaved(true);
       } else {
-        await createInstitution({ name, address, logoUrl });
+        await createInstitution({ name, address, headerLines, logoUrl });
         setName("");
         setAddress("");
+        setHeaderLines("");
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
@@ -122,6 +131,26 @@ export function InstitutionForm({
         />
         <p className="mt-1 text-xs text-slate-400">
           Aparece pequeno no rodapé do laudo impresso.
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700">
+          Texto do cabeçalho (ao lado da logo)
+        </label>
+        <textarea
+          value={headerLines}
+          onChange={(e) => setHeaderLines(e.target.value)}
+          rows={3}
+          placeholder={
+            "SECRETARIA MUNICIPAL DE SAÚDE\nIGH - INSTITUTO DE GESTÃO E HUMANIZAÇÃO\nPOLICLÍNICA FRANCISCO MARTINS DA SILVA"
+          }
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+        <p className="mt-1 text-xs text-slate-400">
+          Uma linha por linha. Deixe em branco para usar o texto padrão
+          (&quot;Neurofisiologia Clínica / Eletroencefalograma Digital
+          (EEG) / Vídeo-Eletroencefalograma (Vídeo-EEG)&quot;).
         </p>
       </div>
 

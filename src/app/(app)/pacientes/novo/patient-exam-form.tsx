@@ -25,7 +25,7 @@ export function PatientExamForm({
   const [fullName, setFullName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [examDate, setExamDate] = useState(todayIso());
-  const [requestingDoctor, setRequestingDoctor] = useState("");
+  const [requestingDoctor, setRequestingDoctor] = useState("Dr(a): ");
   const [comorbidities, setComorbidities] = useState("");
   const [medications, setMedications] = useState("");
   const [institutionId, setInstitutionId] = useState(

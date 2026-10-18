@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mergeTemplatePlaceholders } from "@/lib/template";
+import { normalizeEmptyParagraphs } from "@/lib/content-html";
 import { renderExamPdf } from "@/lib/pdf";
 import { signExamPdf, VidasReauthorizationRequiredError } from "@/lib/signing/vidas";
 
@@ -119,7 +120,10 @@ export async function saveLaudoContent(examId: string, contentHtml: string) {
 
   const { error } = await supabase
     .from("exams")
-    .update({ content_html: contentHtml, updated_at: new Date().toISOString() })
+    .update({
+      content_html: normalizeEmptyParagraphs(contentHtml),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", examId);
 
   if (error) throw new Error(error.message);

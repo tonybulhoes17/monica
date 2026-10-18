@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function createInstitution(input: {
   name: string;
   address: string;
+  headerLines: string;
   logoUrl: string | null;
 }) {
   await requireAdmin();
@@ -15,6 +16,7 @@ export async function createInstitution(input: {
   const { error } = await supabase.from("institutions").insert({
     name: input.name,
     address: input.address || null,
+    header_lines: input.headerLines || null,
     logo_url: input.logoUrl,
   });
 
@@ -24,7 +26,12 @@ export async function createInstitution(input: {
 
 export async function updateInstitution(
   id: string,
-  input: { name: string; address: string; logoUrl: string | null },
+  input: {
+    name: string;
+    address: string;
+    headerLines: string;
+    logoUrl: string | null;
+  },
 ) {
   await requireAdmin();
   const supabase = await createClient();
@@ -34,6 +41,7 @@ export async function updateInstitution(
     .update({
       name: input.name,
       address: input.address || null,
+      header_lines: input.headerLines || null,
       logo_url: input.logoUrl,
     })
     .eq("id", id);

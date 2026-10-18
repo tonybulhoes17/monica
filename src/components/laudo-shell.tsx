@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ExamWithPatient } from "@/lib/database.types";
 import { formatAge } from "@/lib/age";
+import { toTitleCase } from "@/lib/text-format";
 
 function formatDateBr(iso: string): string {
   return iso.split("-").reverse().join("/");
@@ -64,6 +65,9 @@ function ShieldCheckIcon({
 export function LaudoHeaderBlock({ exam }: { exam: ExamWithPatient }) {
   const { patient, institution } = exam;
   const logoUrl = institution?.logo_url || "/branding/logo.png";
+  const headerLines = institution?.header_lines
+    ? institution.header_lines.split("\n").filter((line) => line.trim())
+    : SERVICE_LINES;
 
   return (
     <>
@@ -84,7 +88,7 @@ export function LaudoHeaderBlock({ exam }: { exam: ExamWithPatient }) {
           className="leading-tight text-slate-900"
           style={{ fontFamily: TIMES_NEW_ROMAN, fontSize: "12pt", fontWeight: 700 }}
         >
-          {SERVICE_LINES.map((line) => (
+          {headerLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
@@ -100,22 +104,24 @@ export function LaudoHeaderBlock({ exam }: { exam: ExamWithPatient }) {
         }}
       >
         <p>
-          <span className="font-bold">Nome</span>: {patient.full_name}
+          <span className="font-bold uppercase">Nome</span>:{" "}
+          {toTitleCase(patient.full_name)}
         </p>
         <p>
-          <span className="font-bold">Data do exame</span>:{" "}
+          <span className="font-bold uppercase">Data do exame</span>:{" "}
           {formatDateBr(exam.exam_date)}
         </p>
         <p>
-          <span className="font-bold">Data de Nascimento</span>:{" "}
+          <span className="font-bold uppercase">Data de Nascimento</span>:{" "}
           {formatDateBr(patient.birth_date)}
         </p>
         <p>
-          <span className="font-bold">Idade</span>:{" "}
+          <span className="font-bold uppercase">Idade</span>:{" "}
           {formatAge(patient.birth_date, exam.exam_date)}
         </p>
         <p className="col-span-2">
-          <span className="font-bold">Solicitante</span>: {exam.requesting_doctor}
+          <span className="font-bold uppercase">Solicitante</span>:{" "}
+          {toTitleCase(exam.requesting_doctor)}
         </p>
       </section>
     </>

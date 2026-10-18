@@ -2,7 +2,11 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LaudoShell, LaudoHeaderBlock } from "@/components/laudo-shell";
 import { generateQrDataUrl } from "@/lib/qrcode";
-import { splitLeadingHeading, splitOnPageBreaks } from "@/lib/content-html";
+import {
+  normalizeEmptyParagraphs,
+  splitLeadingHeading,
+  splitOnPageBreaks,
+} from "@/lib/content-html";
 import { AutoPrint } from "./auto-print";
 
 export default async function ImprimirLaudoPage({
@@ -28,12 +32,18 @@ export default async function ImprimirLaudoPage({
     ? await generateQrDataUrl("https://validar.iti.gov.br")
     : null;
 
+  // Normaliza parágrafos vazios (bug: <p></p> salvo pelo editor some na
+  // impressão mesmo aparecendo normal durante a edição — ver
+  // normalizeEmptyParagraphs). Feito aqui também (não só ao salvar) pra
+  // consertar na hora laudos salvos antes dessa correção existir.
+  const contentHtml = normalizeEmptyParagraphs(exam.content_html);
+
   // Laudos longos (ex. Vídeo-EEG) podem ter um marcador de quebra de página
   // no meio do texto — quando presente, repetimos o cabeçalho (logo + caixa
   // de dados + título) no início de cada trecho seguinte, igual à 1ª
   // página. Sem marcador, o conteúdo flui normalmente num só cabeçalho.
-  const { title } = splitLeadingHeading(exam.content_html);
-  const [firstChunk, ...restChunks] = splitOnPageBreaks(exam.content_html);
+  const { title } = splitLeadingHeading(contentHtml);
+  const [firstChunk, ...restChunks] = splitOnPageBreaks(contentHtml);
 
   return (
     <>

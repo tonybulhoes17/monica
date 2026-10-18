@@ -86,11 +86,34 @@ null` (migração 0011), então eles só ficam "sem instituição". Existe uma
 instituição padrão pré-cadastrada ("Dra. Monica Seixas") usando a logo local
 em `public/branding/logo.png`.
 
-**Assumi** que o texto fixo ao lado da logo ("NEUROFISIOLOGIA CLÍNICA /
-ELETROENCEFALOGRAMA DIGITAL (EEG) / VÍDEO-ELETROENCEFALOGRAMA (VÍDEO-EEG)") é
-igual para qualquer instituição — só a logo muda. Se isso estiver errado (se
-esse texto também devia variar por instituição), avisar para eu mover esse
-campo para a tabela `institutions`.
+O texto ao lado da logo ("NEUROFISIOLOGIA CLÍNICA / ELETROENCEFALOGRAMA
+DIGITAL (EEG) / VÍDEO-ELETROENCEFALOGRAMA (VÍDEO-EEG)") é o padrão para
+qualquer instituição, mas pode ser sobrescrito por instituição via o campo
+`institutions.header_lines` (uma linha por linha, editável em
+`/admin/instituicoes/[id]`) — usado, por exemplo, quando o exame é feito
+numa policlínica municipal em vez do consultório da Dra. Monica.
+
+## Caixa de dados do paciente e edição do laudo
+
+Na caixa de dados (Nome/Data do exame/Data de Nascimento/Idade/Solicitante),
+os rótulos saem em negrito caixa alta (NOME, SOLICITANTE...) e os valores de
+texto livre (nome do paciente, médico solicitante) em "Primeira Letra De
+Cada Palavra Maiúscula" — ver `toTitleCase()` em `src/lib/text-format.ts` —
+independente de como foram digitados no cadastro. O campo "Médico
+solicitante" já vem pré-preenchido com `"Dr(a): "` ao lançar um novo exame
+(`src/app/(app)/pacientes/novo/patient-exam-form.tsx`), mas continua
+totalmente editável — a secretária completa o nome e ajusta para "Dr."/"Dra."
+quando sabe o gênero.
+
+Linhas em branco extras digitadas no editor de texto do laudo (Enter duas
+vezes) agora são respeitadas na impressão/PDF — o Tiptap salva um `<p></p>`
+genuinamente vazio para isso, que tem altura normal durante a edição (o
+ProseMirror só mostra um `<br>` interno em tela, que não entra no HTML
+salvo) mas colapsava para altura zero no motor de impressão do Chromium.
+`normalizeEmptyParagraphs()` em `src/lib/content-html.ts` troca por
+`<p><br></p>`, aplicado tanto ao salvar (`saveLaudoContent`) quanto na
+própria renderização de impressão (corrige também laudos salvos antes
+dessa correção existir).
 
 ## Branding (já incorporado)
 
@@ -184,6 +207,9 @@ dela mantêm os bytes originais no bucket `signed-laudos`.
    - `supabase/migrations/0011_institution_address_and_delete.sql` (coluna
      `institutions.address`; `exams.institution_id` passa a `on delete set
      null`, pra permitir excluir instituição)
+   - `supabase/migrations/0012_institution_header_lines.sql` (coluna
+     `institutions.header_lines` — texto do cabeçalho ao lado da logo,
+     sobrescrevendo o padrão por instituição)
 3. Em **Project Settings → API**, copie `URL`, `anon public key` e
    `service_role key` para o `.env.local` (ver passo 2 abaixo).
 4. Crie o primeiro usuário admin (Dra. Monica) com o script

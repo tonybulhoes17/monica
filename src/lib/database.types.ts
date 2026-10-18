@@ -61,6 +61,7 @@ export interface Database {
           name: string;
           logo_url: string | null;
           address: string | null;
+          header_lines: string | null;
           created_at: string;
         };
         Insert: {
@@ -68,6 +69,7 @@ export interface Database {
           name: string;
           logo_url?: string | null;
           address?: string | null;
+          header_lines?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["institutions"]["Insert"]>;
