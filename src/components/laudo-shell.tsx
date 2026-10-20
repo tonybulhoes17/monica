@@ -202,38 +202,13 @@ export function LaudoShell({
     : "";
   const doctorNameUpper = DOCTOR_NAME.replace(/^Dra?\.\s*/, "").toUpperCase();
 
-  return (
-    <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
-      <section className="no-print mt-0 mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
-        <span className="font-semibold">
-          Referência para a Dra. Monica (não entra no laudo impresso):
-        </span>{" "}
-        Comorbidades: {exam.comorbidities || "nenhuma relatada"} · Medicações:{" "}
-        {exam.medications || "nenhuma relatada"}
-      </section>
-
-      {repeatingHeader ? (
-        <table className="laudo-repeating-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <td style={{ padding: 0, border: "none" }}>
-                <LaudoHeaderBlock exam={exam} />
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ padding: 0, border: "none" }}>{body}</td>
-            </tr>
-          </tbody>
-        </table>
-      ) : (
-        <>
-          <LaudoHeaderBlock exam={exam} />
-          <section>{body}</section>
-        </>
-      )}
-
+  const footerBlock = (
+    // display:flow-root cria um novo bloco de formatação só pra margin-top
+    // do <footer> (mt-10) não "vazar"/colapsar pra fora desta div — sem
+    // isso, a medição de altura em renderExamPdf() (ver src/lib/pdf.ts)
+    // subestima o espaço de verdade ocupado por este bloco, empurrando o
+    // espaçador além da conta e estourando pra uma página extra em branco.
+    <div id="laudo-footer-block" style={{ display: "flow-root" }}>
       {isRealVidasSignature ? (
         <footer className="mt-10 flex items-start justify-between gap-4 text-slate-700">
           {/* Selo de assinatura eletrônica qualificada (ICP-Brasil) */}
@@ -311,6 +286,58 @@ export function LaudoShell({
           {exam.institution.address}
         </p>
       )}
+    </div>
+  );
+
+  return (
+    <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
+      <section className="no-print mt-0 mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+        <span className="font-semibold">
+          Referência para a Dra. Monica (não entra no laudo impresso):
+        </span>{" "}
+        Comorbidades: {exam.comorbidities || "nenhuma relatada"} · Medicações:{" "}
+        {exam.medications || "nenhuma relatada"}
+      </section>
+
+      {repeatingHeader ? (
+        <>
+          <table
+            id="laudo-repeating-table"
+            className="laudo-repeating-table"
+            style={{ width: "100%", borderCollapse: "collapse" }}
+          >
+            <thead>
+              <tr>
+                <td style={{ padding: 0, border: "none" }}>
+                  <LaudoHeaderBlock exam={exam} />
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: 0, border: "none" }}>{body}</td>
+              </tr>
+            </tbody>
+          </table>
+          {/* Preenchido via JS em renderExamPdf() (ver src/lib/pdf.ts) com a
+              altura exata que falta até o fim da última página, pra
+              assinatura abaixo nunca ficar "flutuando" logo após o texto —
+              ela deve ficar sempre encostada no rodapé real da folha. Uma
+              <tfoot> pareceria a solução óbvia, mas foi testado e
+              descartado: motores de impressão repetem thead E tfoot em
+              TODA página da tabela, não só na última (confirmado
+              renderizando um PDF de teste) — apareceria assinatura em toda
+              página, não só na final. */}
+          <div id="laudo-footer-spacer" />
+        </>
+      ) : (
+        <>
+          <LaudoHeaderBlock exam={exam} />
+          <section>{body}</section>
+        </>
+      )}
+
+      {footerBlock}
     </div>
   );
 }

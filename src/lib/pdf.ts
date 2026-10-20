@@ -69,10 +69,50 @@ export async function renderExamPdf(
     const previewParam = options?.previewSignedAt
       ? `&previewSignedAt=${encodeURIComponent(options.previewSignedAt)}`
       : "";
+
+    // Mede o conteúdo já renderizado pra calcular quanto falta pro fim da
+    // última página impressa, e empurrar a assinatura pra lá (ver
+    // #laudo-footer-spacer em LaudoShell). Importante: essa medição
+    // precisa acontecer no MESMO viewport que o page.pdf() abaixo vai usar
+    // — descobrimos (testando e comparando a contagem real de páginas)
+    // que page.pdf() NÃO lê a largura de @page/margin pra decidir a
+    // largura do layout; ele deita o HTML na largura do viewport atual
+    // (aqui, o padrão do Puppeteer, 800px — maior que os 210mm de
+    // max-w-[210mm] do .laudo-page, que acaba sendo o limite de verdade) e
+    // só usa @page pra cortar o resultado em folhas A4. @page's margin
+    // top/bottom continuam valendo pra saber quanto cabe de altura por
+    // folha.
+    const PAGE_HEIGHT_MM = 297;
+    const MARGIN_TOP_MM = 18;
+    const MARGIN_BOTTOM_MM = 18;
+    const mmToPx = (mm: number) => (mm * 96) / 25.4;
+    const contentHeightPx = mmToPx(PAGE_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM);
+
+    await page.emulateMediaType("print");
     await page.goto(`${baseUrl}/laudos/${examId}/imprimir?pdf=1${previewParam}`, {
       waitUntil: "networkidle0",
     });
-    await page.emulateMediaType("print");
+
+    await page.evaluate((contentHeightPx: number) => {
+      const table = document.getElementById("laudo-repeating-table");
+      const spacer = document.getElementById("laudo-footer-spacer");
+      const footer = document.getElementById("laudo-footer-block");
+      if (!table || !spacer || !footer) return;
+
+      const theadHeight =
+        table.querySelector("thead")?.getBoundingClientRect().height ?? 0;
+      const tbodyHeight =
+        table.querySelector("tbody")?.getBoundingClientRect().height ?? 0;
+      const footerHeight = footer.getBoundingClientRect().height;
+
+      const usablePerPage = contentHeightPx - theadHeight;
+      if (usablePerPage <= 0) return;
+
+      const numPages = Math.max(1, Math.ceil(tbodyHeight / usablePerPage));
+      const remainderOnLastPage = numPages * usablePerPage - tbodyHeight;
+
+      spacer.style.height = `${Math.max(0, remainderOnLastPage - footerHeight)}px`;
+    }, contentHeightPx);
 
     const pdf = await page.pdf({
       format: "A4",
