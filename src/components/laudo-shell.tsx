@@ -74,13 +74,13 @@ export function LaudoHeaderBlock({ exam }: { exam: ExamWithPatient }) {
       <header className="mb-3 flex items-end gap-4">
         <div
           className="relative shrink-0"
-          style={{ width: "4.8cm", height: "2.4cm" }}
+          style={{ width: "5.4cm", height: "2.7cm" }}
         >
           <Image
             src={logoUrl}
             alt={institution?.name ?? "Logo"}
             fill
-            className="object-contain"
+            className="object-contain object-bottom"
             unoptimized
           />
         </div>
@@ -104,23 +104,23 @@ export function LaudoHeaderBlock({ exam }: { exam: ExamWithPatient }) {
         }}
       >
         <p>
-          <span className="font-bold uppercase">Nome</span>:{" "}
+          <span className="font-bold">Nome</span>:{" "}
           {toTitleCase(patient.full_name)}
         </p>
         <p>
-          <span className="font-bold uppercase">Data do exame</span>:{" "}
+          <span className="font-bold">Data do exame</span>:{" "}
           {formatDateBr(exam.exam_date)}
         </p>
         <p>
-          <span className="font-bold uppercase">Data de Nascimento</span>:{" "}
+          <span className="font-bold">Data de nascimento</span>:{" "}
           {formatDateBr(patient.birth_date)}
         </p>
         <p>
-          <span className="font-bold uppercase">Idade</span>:{" "}
+          <span className="font-bold">Idade</span>:{" "}
           {formatAge(patient.birth_date, exam.exam_date)}
         </p>
         <p className="col-span-2">
-          <span className="font-bold uppercase">Solicitante</span>:{" "}
+          <span className="font-bold">Solicitante</span>:{" "}
           {toTitleCase(exam.requesting_doctor)}
         </p>
       </section>

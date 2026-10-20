@@ -95,15 +95,28 @@ numa policlínica municipal em vez do consultório da Dra. Monica.
 
 ## Caixa de dados do paciente e edição do laudo
 
-Na caixa de dados (Nome/Data do exame/Data de Nascimento/Idade/Solicitante),
-os rótulos saem em negrito caixa alta (NOME, SOLICITANTE...) e os valores de
-texto livre (nome do paciente, médico solicitante) em "Primeira Letra De
-Cada Palavra Maiúscula" — ver `toTitleCase()` em `src/lib/text-format.ts` —
-independente de como foram digitados no cadastro. O campo "Médico
-solicitante" já vem pré-preenchido com `"Dr(a): "` ao lançar um novo exame
-(`src/app/(app)/pacientes/novo/patient-exam-form.tsx`), mas continua
-totalmente editável — a secretária completa o nome e ajusta para "Dr."/"Dra."
-quando sabe o gênero.
+Na caixa de dados (Nome/Data do exame/Data de nascimento/Idade/Solicitante),
+os rótulos saem em negrito, só a primeira letra maiúscula (ex: "Nome:"), e os
+valores de texto livre (nome do paciente, médico solicitante) em "Primeira
+Letra De Cada Palavra Maiúscula" — ver `toTitleCase()` em
+`src/lib/text-format.ts` — independente de como foram digitados no cadastro.
+O campo "Médico solicitante" já vem pré-preenchido com `"Dr(a): "` ao lançar
+um novo exame (`src/app/(app)/pacientes/novo/patient-exam-form.tsx`), mas
+continua totalmente editável — a secretária completa o nome e ajusta para
+"Dr."/"Dra." quando sabe o gênero; a Dra. Monica também pode corrigi-lo
+direto na tela de "Fazer laudo" (campo "Solicitante" logo acima do editor,
+ao lado do seletor de instituição — `updateExamRequestingDoctor` em
+`laudos/[examId]/actions.ts`).
+
+O espaçamento entre parágrafos do corpo do laudo é 0,8rem por padrão
+(`.laudo-prose p` em `globals.css`), mas pode ser ajustado por trecho
+selecionado no editor — como o controle de espaçamento entre linhas do
+Word — via o seletor "Espaçamento" na barra de ferramentas (entre o seletor
+de título e os botões de lista). Implementado estendendo o nó `paragraph`
+do Tiptap com um atributo `spacing` que vira `margin-top`/`margin-bottom`
+inline (`src/components/tiptap-paragraph-spacing.ts`). O parágrafo
+"Conclusão:" de todos os modelos usa 0,4rem (mais compacto, já que só
+antecede uma lista curta) — migração 0013.
 
 Linhas em branco extras digitadas no editor de texto do laudo (Enter duas
 vezes) agora são respeitadas na impressão/PDF — o Tiptap salva um `<p></p>`

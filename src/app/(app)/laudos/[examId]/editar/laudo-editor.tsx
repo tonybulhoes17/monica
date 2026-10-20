@@ -14,6 +14,7 @@ import {
   saveLaudoContent,
   signLaudo,
   updateExamInstitution,
+  updateExamRequestingDoctor,
 } from "../actions";
 
 export interface VidasStatus {
@@ -57,6 +58,11 @@ export function LaudoEditor({
   const [institutionError, setInstitutionError] = useState<string | null>(
     null,
   );
+  const [requestingDoctor, setRequestingDoctor] = useState(
+    exam.requesting_doctor,
+  );
+  const [savingDoctor, setSavingDoctor] = useState(false);
+  const [doctorError, setDoctorError] = useState<string | null>(null);
 
   const isSigned = exam.status === "signed";
   const isAdmin = profile.role === "admin";
@@ -74,6 +80,22 @@ export function LaudoEditor({
       );
     } finally {
       setSavingInstitution(false);
+    }
+  }
+
+  async function handleRequestingDoctorBlur() {
+    if (requestingDoctor === exam.requesting_doctor) return;
+    setSavingDoctor(true);
+    setDoctorError(null);
+    try {
+      await updateExamRequestingDoctor(exam.id, requestingDoctor);
+      router.refresh();
+    } catch (err) {
+      setDoctorError(
+        err instanceof Error ? err.message : "Erro ao salvar solicitante.",
+      );
+    } finally {
+      setSavingDoctor(false);
     }
   }
 
@@ -236,6 +258,24 @@ export function LaudoEditor({
           {institutionError && (
             <span className="text-red-600">{institutionError}</span>
           )}
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="no-print flex items-center gap-2 text-xs text-slate-600">
+          <label htmlFor="requesting-doctor-input" className="font-medium">
+            Solicitante:
+          </label>
+          <input
+            id="requesting-doctor-input"
+            value={requestingDoctor}
+            disabled={isSigned || savingDoctor}
+            onChange={(e) => setRequestingDoctor(e.target.value)}
+            onBlur={handleRequestingDoctorBlur}
+            className="w-64 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-50"
+          />
+          {savingDoctor && <span>Salvando...</span>}
+          {doctorError && <span className="text-red-600">{doctorError}</span>}
         </div>
       )}
 

@@ -7,6 +7,10 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import clsx from "clsx";
 import {
+  ParagraphWithSpacing,
+  PARAGRAPH_SPACING_OPTIONS,
+} from "./tiptap-paragraph-spacing";
+import {
   Bold,
   Italic,
   Underline as UnderlineIcon,
@@ -31,7 +35,8 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ paragraph: false }),
+      ParagraphWithSpacing,
       Underline,
       TextStyleKit,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -105,6 +110,26 @@ export function RichTextEditor({
             <option value="1">Título 1</option>
             <option value="2">Título 2</option>
             <option value="3">Título 3</option>
+          </select>
+
+          <select
+            onChange={(e) => {
+              const value = e.target.value;
+              editor
+                .chain()
+                .focus()
+                .updateAttributes("paragraph", { spacing: value || null })
+                .run();
+            }}
+            value={(editor.getAttributes("paragraph").spacing as string) ?? ""}
+            title="Espaçamento do parágrafo"
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
+          >
+            {PARAGRAPH_SPACING_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
 
           <Divider />

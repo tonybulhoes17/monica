@@ -114,6 +114,39 @@ export async function updateExamInstitution(
   revalidatePath(`/laudos/${examId}/editar`);
 }
 
+/**
+ * Corrige o médico solicitante direto na tela de "Fazer laudo" — sem
+ * precisar passar por "Editar ficha". Bloqueado para laudos já assinados
+ * (o nome já está impresso no PDF assinado).
+ */
+export async function updateExamRequestingDoctor(
+  examId: string,
+  requestingDoctor: string,
+) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: exam } = await supabase
+    .from("exams")
+    .select("status")
+    .eq("id", examId)
+    .single();
+  if (!exam) throw new Error("Exame não encontrado.");
+  if (exam.status === "signed") {
+    throw new Error(
+      "Este laudo já está assinado. Reabra para edição antes de trocar o solicitante.",
+    );
+  }
+
+  const { error } = await supabase
+    .from("exams")
+    .update({ requesting_doctor: requestingDoctor, updated_at: new Date().toISOString() })
+    .eq("id", examId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/laudos/${examId}/editar`);
+}
+
 export async function saveLaudoContent(examId: string, contentHtml: string) {
   await requireAdmin();
   const supabase = await createClient();
