@@ -12,6 +12,18 @@ interface LaudoShellProps {
   body: React.ReactNode;
   /** Data URL (PNG) do QR code de validação — só é usado quando o laudo tem assinatura real do Vidas. */
   qrCodeDataUrl?: string | null;
+  /**
+   * Quando true, envolve cabeçalho (logo + linhas de serviço + caixa de
+   * dados do paciente) e corpo numa <table> com o cabeçalho num <thead>.
+   * Isso faz o navegador/motor de impressão repetir automaticamente esse
+   * cabeçalho no topo de toda página seguinte quando o laudo é longo o
+   * bastante pra passar de uma página — comportamento nativo de
+   * `<thead>` em tabelas que quebram entre páginas, sem precisar medir
+   * altura de conteúdo nem marcar manualmente onde quebrar. Usado só na
+   * tela de impressão/PDF (ver imprimir/page.tsx); a tela de edição
+   * (Tiptap) continua sem tabela, com o cabeçalho fixo simples.
+   */
+  repeatingHeader?: boolean;
 }
 
 const DOCTOR_NAME = "Dra. Mônica Seixas";
@@ -167,7 +179,12 @@ function SignatureNameBlock() {
   );
 }
 
-export function LaudoShell({ exam, body, qrCodeDataUrl }: LaudoShellProps) {
+export function LaudoShell({
+  exam,
+  body,
+  qrCodeDataUrl,
+  repeatingHeader,
+}: LaudoShellProps) {
   const isSigned = exam.status === "signed";
   const signature = exam.signature_payload as
     | { provider?: string; signedAt?: string; certificateAlias?: string }
@@ -187,9 +204,7 @@ export function LaudoShell({ exam, body, qrCodeDataUrl }: LaudoShellProps) {
 
   return (
     <div className="laudo-page mx-auto w-full max-w-[210mm] border border-slate-200 p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
-      <LaudoHeaderBlock exam={exam} />
-
-      <section className="no-print mt-4 mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+      <section className="no-print mt-0 mb-4 rounded-md border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-800">
         <span className="font-semibold">
           Referência para a Dra. Monica (não entra no laudo impresso):
         </span>{" "}
@@ -197,7 +212,27 @@ export function LaudoShell({ exam, body, qrCodeDataUrl }: LaudoShellProps) {
         {exam.medications || "nenhuma relatada"}
       </section>
 
-      <section>{body}</section>
+      {repeatingHeader ? (
+        <table className="laudo-repeating-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <td style={{ padding: 0, border: "none" }}>
+                <LaudoHeaderBlock exam={exam} />
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ padding: 0, border: "none" }}>{body}</td>
+            </tr>
+          </tbody>
+        </table>
+      ) : (
+        <>
+          <LaudoHeaderBlock exam={exam} />
+          <section>{body}</section>
+        </>
+      )}
 
       {isRealVidasSignature ? (
         <footer className="mt-10 flex items-start justify-between gap-4 text-slate-700">

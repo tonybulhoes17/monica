@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LaudoShell, LaudoHeaderBlock } from "@/components/laudo-shell";
+import { LaudoShell } from "@/components/laudo-shell";
 import { generateQrDataUrl } from "@/lib/qrcode";
-import {
-  normalizeEmptyParagraphs,
-  splitLeadingHeading,
-  splitOnPageBreaks,
-} from "@/lib/content-html";
+import { normalizeEmptyParagraphs } from "@/lib/content-html";
 import { AutoPrint } from "./auto-print";
 import type { ExamWithPatient } from "@/lib/database.types";
 
@@ -60,40 +56,18 @@ export default async function ImprimirLaudoPage({
   // consertar na hora laudos salvos antes dessa correção existir.
   const contentHtml = normalizeEmptyParagraphs(exam.content_html!);
 
-  // Laudos longos (ex. Vídeo-EEG) podem ter um marcador de quebra de página
-  // no meio do texto — quando presente, repetimos o cabeçalho (logo + caixa
-  // de dados + título) no início de cada trecho seguinte, igual à 1ª
-  // página. Sem marcador, o conteúdo flui normalmente num só cabeçalho.
-  const { title } = splitLeadingHeading(contentHtml);
-  const [firstChunk, ...restChunks] = splitOnPageBreaks(contentHtml);
-
   return (
     <>
       <AutoPrint />
       <LaudoShell
         exam={exam}
         qrCodeDataUrl={qrCodeDataUrl}
+        repeatingHeader
         body={
-          <>
-            <div
-              className="laudo-prose"
-              dangerouslySetInnerHTML={{ __html: firstChunk }}
-            />
-            {restChunks.map((chunk, i) => (
-              <div className="laudo-page-break" key={i}>
-                <LaudoHeaderBlock exam={exam} />
-                {title && (
-                  <div className="laudo-prose">
-                    <h1>{title}</h1>
-                  </div>
-                )}
-                <div
-                  className="laudo-prose"
-                  dangerouslySetInnerHTML={{ __html: chunk }}
-                />
-              </div>
-            ))}
-          </>
+          <div
+            className="laudo-prose"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
         }
       />
     </>

@@ -303,20 +303,16 @@ descartadas antes desta:
   templates não funcionam de forma confiável no Linux (ver
   https://github.com/puppeteer/puppeteer/issues/12196).
 
-A solução final não depende de nenhum recurso avançado/instável de
-impressão: um modelo de laudo pode conter o marcador
-`<!--quebra-de-pagina-->` (ver `src/lib/content-html.ts`) no meio do
-`content_html`, no ponto onde a 2ª página deve começar. A página de
-impressão (`src/app/(print)/laudos/[examId]/imprimir/page.tsx`) separa o
-conteúdo nesse marcador e, para cada trecho depois do primeiro, repete o
-cabeçalho de verdade (componente `LaudoHeaderBlock`, exportado de
-`src/components/laudo-shell.tsx` — o mesmo usado na 1ª página, então nunca
-sai dessincronizado visualmente) dentro de um `<div className="laudo-page-break">`,
-que força a quebra de página via `break-before: page` (CSS padrão, suportado
-de forma confiável em qualquer motor de impressão). O marcador não é
-detectado automaticamente — precisa ser inserido manualmente no texto do
-modelo, no ponto certo, como foi feito no modelo "Vídeo-EEG Normal"
-(`supabase/migrations/0010_seed_template_video_eeg_normal.sql`).
+A solução final também não depende de nenhum recurso avançado/instável de
+impressão, e funciona de forma automática para qualquer laudo, sem precisar
+marcar nada manualmente no texto: `LaudoShell`
+(`src/components/laudo-shell.tsx`), quando usado na visualização de
+impressão/PDF, envolve o cabeçalho (componente `LaudoHeaderBlock`) e o
+corpo numa `<table>` com o cabeçalho dentro de um `<thead>` e o corpo
+dentro do `<tbody>`. `<thead>` é repetido automaticamente pelo motor de
+impressão no topo de toda página em que a tabela continua — comportamento
+padrão de HTML/CSS para tabelas que quebram entre páginas, sem relação com
+as APIs instáveis de header/footer do Puppeteer mencionadas acima.
 
 ## Estrutura
 
