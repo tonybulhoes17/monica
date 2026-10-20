@@ -40,9 +40,14 @@ de laudos de eletroencefalograma. Stack: Next.js (App Router) + Supabase
    **instituição** do exame direto ali (select no topo, admin-only) — útil
    quando a secretária selecionou o local errado no lançamento. Bloqueado
    também para laudos já assinados.
-5. Botões **Imprimir** (abre a visualização e chama a impressão do navegador)
-   e **Baixar PDF** (gera PDF no servidor, idêntico ao layout da tela) sempre
-   disponíveis.
+5. Botões **Imprimir** e **Baixar PDF** sempre disponíveis — os dois abrem o
+   mesmo PDF gerado no servidor (`/api/laudos/[id]/pdf`), só mudando o
+   `Content-Disposition` (`inline` vs `attachment`). "Imprimir" abre o PDF
+   no visualizador do próprio navegador em vez de imprimir a página HTML
+   direto — de propósito: imprimir uma página HTML comum faz o navegador
+   acrescentar cabeçalho/rodapé próprio (data, título da aba, URL), que não
+   dá pra desligar via código; imprimindo o PDF pelo visualizador, esse
+   cabeçalho/rodapé do navegador nunca aparece.
 6. **Salvar como modelo**: qualquer laudo em edição pode virar um novo modelo
    padrão — basta dar um nome. Fica disponível para qualquer paciente dali em
    diante (gerenciável em **Modelos de laudo**).
