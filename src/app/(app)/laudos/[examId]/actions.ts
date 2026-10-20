@@ -217,9 +217,22 @@ export async function signLaudo(examId: string) {
   if (!exam) throw new Error("Exame não encontrado.");
   if (!exam.content_html) throw new Error("O laudo ainda não tem conteúdo.");
 
+  // Calculado ANTES de renderizar: o PDF que vai pro Vidas (e depois vira
+  // o documento assinado oficial) precisa já mostrar o selo de assinatura
+  // com esse horário — se renderizássemos antes e só definíssemos
+  // signed_at depois (no update do banco), o PDF assinado ficaria com o
+  // placeholder "não assinado" pra sempre, mesmo com a assinatura
+  // criptográfica válida por dentro (bug real encontrado: ao reassinar um
+  // laudo editado, o "Baixar PDF" parava de mostrar o selo, enquanto
+  // "Imprimir" — que renderiza ao vivo a partir do banco já atualizado —
+  // continuava mostrando certo).
+  const signedAt = new Date().toISOString();
+
   const baseUrl = await getAppBaseUrl();
   const cookieHeader = await getCookieHeader();
-  const pdfBuffer = await renderExamPdf(examId, baseUrl, cookieHeader);
+  const pdfBuffer = await renderExamPdf(examId, baseUrl, cookieHeader, {
+    previewSignedAt: signedAt,
+  });
 
   if (pdfBuffer.length > MAX_PDF_BYTES) {
     throw new Error(
@@ -234,6 +247,7 @@ export async function signLaudo(examId: string) {
       pdfBuffer,
       examId,
       alias: `laudo-eeg-${exam.patient.full_name}`,
+      signedAt,
     });
   } catch (err) {
     if (err instanceof VidasReauthorizationRequiredError) {

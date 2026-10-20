@@ -31,6 +31,17 @@ export async function renderExamPdf(
   examId: string,
   baseUrl: string,
   cookieHeader: string | null,
+  options?: {
+    /**
+     * Usado só por signLaudo() (ver laudos/[examId]/actions.ts): renderiza
+     * o laudo já com o selo de assinatura (como se `signedAt` fosse o
+     * horário final) antes de mandar pro Vidas assinar de verdade — sem
+     * isso, o PDF que fica salvo como documento assinado mostra pra
+     * sempre o placeholder "não assinado", já que é renderizado antes do
+     * status no banco virar "signed".
+     */
+    previewSignedAt?: string;
+  },
 ): Promise<Buffer> {
   const isServerless = Boolean(process.env.VERCEL);
 
@@ -55,7 +66,10 @@ export async function renderExamPdf(
     if (cookieHeader) {
       await page.setExtraHTTPHeaders({ Cookie: cookieHeader });
     }
-    await page.goto(`${baseUrl}/laudos/${examId}/imprimir?pdf=1`, {
+    const previewParam = options?.previewSignedAt
+      ? `&previewSignedAt=${encodeURIComponent(options.previewSignedAt)}`
+      : "";
+    await page.goto(`${baseUrl}/laudos/${examId}/imprimir?pdf=1${previewParam}`, {
       waitUntil: "networkidle0",
     });
     await page.emulateMediaType("print");

@@ -170,6 +170,22 @@ contrato com a Valid):
 4. A sessão expira sozinha (`expires_at`); expirando, o próximo "Assinar"
    redireciona para autorizar de novo.
 
+**Selo de assinatura no PDF assinado (bug corrigido):** o PDF enviado pro
+Vidas (e depois salvo como `signed_pdf_path`, o documento oficial) é
+renderizado ANTES do banco marcar o exame como `status: "signed"` — então,
+sem cuidado, ele sempre mostraria o placeholder "ainda não assinado" em vez
+do selo verde, mesmo depois de assinado de verdade ("Imprimir" parecia
+certo porque renderiza ao vivo a partir do banco já atualizado; só "Baixar
+PDF" ficava sem o selo — mais perceptível ao reassinar um laudo editado).
+Corrigido calculando `signedAt` ANTES de renderizar e passando como
+`previewSignedAt` pra `/laudos/[id]/imprimir` (`src/lib/pdf.ts` →
+`renderExamPdf(..., { previewSignedAt })`), que renderiza o laudo já como
+se estivesse assinado com aquele horário — e o mesmo `signedAt` é reusado
+depois no registro salvo no banco, garantindo que o selo impresso bate
+exatamente com o que fica no banco. `previewSignedAt` só tem efeito se o
+exame AINDA NÃO estiver realmente assinado (nunca sobrescreve o selo de um
+documento já assinado de verdade).
+
 **Pendente de credenciais reais da Valid para funcionar de verdade:**
 - `VIDAAS_CLIENT_ID` / `VIDAAS_CLIENT_SECRET`: se a Dra. Monica ainda não tem
   uma aplicação registrada no PSC do Vidas, rodar

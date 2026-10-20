@@ -34,11 +34,18 @@ export async function signExamPdf(params: {
   pdfBuffer: Buffer;
   examId: string;
   alias: string;
+  /**
+   * Horário usado tanto no selo visual já renderizado no PDF (ver
+   * previewSignedAt em src/lib/pdf.ts) quanto no registro salvo no banco —
+   * precisa ser o MESMO valor nos dois lugares, calculado pelo chamador
+   * antes de renderizar o PDF, não gerado aqui de novo.
+   */
+  signedAt: string;
 }): Promise<SignPdfResult> {
   if (!isVidasConfigured()) {
     return {
       provider: "simulated",
-      signedAt: new Date().toISOString(),
+      signedAt: params.signedAt,
       certificateAlias: null,
       signedPdf: null,
     };
@@ -63,7 +70,7 @@ export async function signExamPdf(params: {
 
   return {
     provider: "vidas",
-    signedAt: new Date().toISOString(),
+    signedAt: params.signedAt,
     certificateAlias: result.certificateAlias,
     signedPdf: Buffer.from(result.signedPdfBase64, "base64"),
   };

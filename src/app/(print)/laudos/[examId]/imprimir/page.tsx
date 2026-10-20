@@ -8,26 +8,48 @@ import {
   splitOnPageBreaks,
 } from "@/lib/content-html";
 import { AutoPrint } from "./auto-print";
+import type { ExamWithPatient } from "@/lib/database.types";
 
 export default async function ImprimirLaudoPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ examId: string }>;
+  searchParams: Promise<{ previewSignedAt?: string }>;
 }) {
   const { examId } = await params;
+  const { previewSignedAt } = await searchParams;
   const supabase = await createClient();
 
-  const { data: exam } = await supabase
+  const { data: examRow } = await supabase
     .from("exams")
     .select("*, patient:patients(*), institution:institutions(*)")
     .eq("id", examId)
     .single();
 
-  if (!exam || !exam.content_html) notFound();
+  if (!examRow || !examRow.content_html) notFound();
 
-  const isRealVidasSignature =
-    exam.status === "signed" &&
-    (exam.signature_payload as { provider?: string } | null)?.provider === "vidas";
+  const alreadySigned =
+    examRow.status === "signed" &&
+    (examRow.signature_payload as { provider?: string } | null)?.provider === "vidas";
+
+  // `previewSignedAt` é usado só internamente por signLaudo() (ver
+  // src/app/(app)/laudos/[examId]/actions.ts): renderiza o laudo JÁ COM o
+  // selo de assinatura antes de mandar pro Vidas assinar de verdade — sem
+  // isso, o PDF que vira signed_pdf_path mostra o placeholder "não
+  // assinado" pra sempre, porque é renderizado antes do status no banco
+  // virar "signed". Só tem efeito se o exame ainda não estiver REALMENTE
+  // assinado, pra nunca sobrescrever o selo de um documento já assinado.
+  const isPreview = Boolean(previewSignedAt) && !alreadySigned;
+  const exam: ExamWithPatient = isPreview
+    ? {
+        ...examRow,
+        status: "signed",
+        signature_payload: { provider: "vidas", signedAt: previewSignedAt },
+      }
+    : examRow;
+
+  const isRealVidasSignature = alreadySigned || isPreview;
   const qrCodeDataUrl = isRealVidasSignature
     ? await generateQrDataUrl("https://validar.iti.gov.br")
     : null;
@@ -36,7 +58,7 @@ export default async function ImprimirLaudoPage({
   // impressão mesmo aparecendo normal durante a edição — ver
   // normalizeEmptyParagraphs). Feito aqui também (não só ao salvar) pra
   // consertar na hora laudos salvos antes dessa correção existir.
-  const contentHtml = normalizeEmptyParagraphs(exam.content_html);
+  const contentHtml = normalizeEmptyParagraphs(exam.content_html!);
 
   // Laudos longos (ex. Vídeo-EEG) podem ter um marcador de quebra de página
   // no meio do texto — quando presente, repetimos o cabeçalho (logo + caixa
