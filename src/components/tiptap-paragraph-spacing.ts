@@ -28,6 +28,8 @@ export const ParagraphWithSpacing = Paragraph.extend({
 
 export const PARAGRAPH_SPACING_OPTIONS = [
   { value: "", label: "Espaçamento padrão" },
+  { value: "0rem", label: "Nenhum (0,0)" },
+  { value: "0.2rem", label: "Mínimo (0,2)" },
   { value: "0.4rem", label: "Compacto (0,4)" },
   { value: "0.8rem", label: "Normal (0,8)" },
   { value: "1.2rem", label: "Grande (1,2)" },
