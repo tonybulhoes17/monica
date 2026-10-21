@@ -209,6 +209,34 @@ export async function saveExamAsTemplate(examId: string, name: string) {
   revalidatePath("/admin/modelos");
 }
 
+/**
+ * Exclui o exame (e o laudo, se houver) permanentemente. Também remove o
+ * PDF assinado do Storage quando existir, pra não deixar arquivo órfão —
+ * diferente da instituição (FK "on delete set null"), aqui não há o que
+ * preservar: o exame some da lista e não pode ser desfeito.
+ */
+export async function deleteExam(examId: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: exam } = await supabase
+    .from("exams")
+    .select("signed_pdf_path")
+    .eq("id", examId)
+    .single();
+  if (!exam) throw new Error("Exame não encontrado.");
+
+  if (exam.signed_pdf_path) {
+    const adminClient = createAdminClient();
+    await adminClient.storage.from("signed-laudos").remove([exam.signed_pdf_path]);
+  }
+
+  const { error } = await supabase.from("exams").delete().eq("id", examId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+}
+
 export async function signLaudo(examId: string) {
   const admin = await requireAdmin();
   const supabase = await createClient();

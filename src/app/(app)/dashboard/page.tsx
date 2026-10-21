@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { formatAge } from "@/lib/age";
 import { DashboardFilters } from "./dashboard-filters";
+import { DeleteExamButton } from "./delete-exam-button";
 import { ALL_DATES, STATUS_PENDING } from "./constants";
 import { StatusBadge } from "@/components/status-badge";
 
@@ -104,6 +105,12 @@ export default async function DashboardPage({
                   >
                     {exam.status === "signed" ? "Ver laudo" : "Fazer laudo"}
                   </Link>
+                )}
+                {profile.role === "admin" && (
+                  <DeleteExamButton
+                    examId={exam.id}
+                    patientName={exam.patient.full_name}
+                  />
                 )}
               </div>
             </li>
