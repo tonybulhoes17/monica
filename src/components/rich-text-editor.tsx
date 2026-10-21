@@ -28,6 +28,22 @@ interface RichTextEditorProps {
   editable?: boolean;
 }
 
+// Tamanhos em pt (não px) pra bater com o resto da tipografia do laudo,
+// que é toda em pt (11pt no corpo, 12pt na caixa de dados, 14pt no
+// título) — ver src/app/globals.css.
+const FONT_SIZE_OPTIONS = [
+  "8pt",
+  "9pt",
+  "10pt",
+  "11pt",
+  "12pt",
+  "14pt",
+  "16pt",
+  "18pt",
+  "20pt",
+  "24pt",
+];
+
 export function RichTextEditor({
   content,
   onChange,
@@ -128,6 +144,27 @@ export function RichTextEditor({
             {PARAGRAPH_SPACING_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!value) {
+                editor.chain().focus().unsetFontSize().run();
+              } else {
+                editor.chain().focus().setFontSize(value).run();
+              }
+            }}
+            value={(editor.getAttributes("textStyle").fontSize as string) ?? ""}
+            title="Tamanho da fonte"
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
+          >
+            <option value="">Padrão</option>
+            {FONT_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>
+                {size.replace("pt", "")}
               </option>
             ))}
           </select>
