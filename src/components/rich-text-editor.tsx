@@ -57,7 +57,12 @@ export function RichTextEditor({
       StarterKit.configure({ paragraph: false }),
       ParagraphWithSpacing,
       Underline,
-      TextStyleKit,
+      // fontFamily desligado de propósito: o laudo tem uma única tipografia
+      // (Times New Roman/Tinos, ver .laudo-prose em globals.css) — sem
+      // isso, colar texto formatado (ex. do Word) carregava a fonte de
+      // origem (Calibri, Arial...) junto, fazendo a impressão sair com
+      // tipos de letra misturados em vez de manter sempre Times New Roman.
+      TextStyleKit.configure({ fontFamily: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content,

@@ -141,13 +141,25 @@ body {
 @media print {
   @page {
     size: A4;
-    margin: 18mm 16mm;
+    /* top | direita/esquerda | baixo — topo reduzido (era 18mm) pra
+       aproveitar mais a folha A4; precisa bater com MARGIN_TOP_MM e
+       page.pdf({margin}) em src/lib/pdf.ts. */
+    margin: 10mm 16mm 18mm;
   }
   body {
     background: #ffffff !important;
   }
   .no-print {
     display: none !important;
+  }
+  /* O laudo tem uma única tipografia — força Times New Roman/Tinos na
+     impressão mesmo se algum trecho do texto tiver uma font-family
+     diferente salva (ex. de um "colar" de texto do Word antes do editor
+     bloquear isso — ver TextStyleKit em rich-text-editor.tsx). Sem o
+     !important, o style inline de um <span> colado venceria a cascata. */
+  .laudo-prose,
+  .laudo-prose * {
+    font-family: "Times New Roman", "Tinos", Times, serif !important;
   }
 }
 

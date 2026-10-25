@@ -82,8 +82,11 @@ export async function renderExamPdf(
     // só usa @page pra cortar o resultado em folhas A4. @page's margin
     // top/bottom continuam valendo pra saber quanto cabe de altura por
     // folha.
+    // MARGIN_TOP_MM precisa bater com a margem superior do @page em
+    // globals.css e com o `margin.top` do page.pdf() logo abaixo — reduzida
+    // pra aproveitar mais a folha A4 (o laudo começa mais perto do topo).
     const PAGE_HEIGHT_MM = 297;
-    const MARGIN_TOP_MM = 18;
+    const MARGIN_TOP_MM = 10;
     const MARGIN_BOTTOM_MM = 18;
     const mmToPx = (mm: number) => (mm * 96) / 25.4;
     const contentHeightPx = mmToPx(PAGE_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM);
@@ -117,7 +120,7 @@ export async function renderExamPdf(
     const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "18mm", bottom: "18mm", left: "16mm", right: "16mm" },
+      margin: { top: "10mm", bottom: "18mm", left: "16mm", right: "16mm" },
     });
 
     return Buffer.from(pdf);
