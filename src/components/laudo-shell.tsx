@@ -295,8 +295,8 @@ export function LaudoShell({
         <span className="font-semibold">
           Referência para a Dra. Monica (não entra no laudo impresso):
         </span>{" "}
-        Comorbidades: {exam.comorbidities || "nenhuma relatada"} · Medicações:{" "}
-        {exam.medications || "nenhuma relatada"}
+        Motivo do exame: {exam.comorbidities || "nenhuma relatada"} · Medicações
+        anticrise: {exam.medications || "nenhuma relatada"}
       </section>
 
       {repeatingHeader ? (

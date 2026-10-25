@@ -212,7 +212,7 @@ export function FichaEditForm({
         </div>
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700">
-            Comorbidades conhecidas
+            Motivo do exame
           </label>
           <textarea
             value={comorbidities}
@@ -223,7 +223,7 @@ export function FichaEditForm({
         </div>
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700">
-            Medicações de uso regular
+            Medicações anticrise
           </label>
           <textarea
             value={medications}
