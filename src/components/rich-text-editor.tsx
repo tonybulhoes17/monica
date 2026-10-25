@@ -25,6 +25,8 @@ import {
 interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
+  /** Chamado quando o editor perde o foco (clicou fora/saiu pra outro campo). */
+  onBlur?: () => void;
   editable?: boolean;
 }
 
@@ -47,6 +49,7 @@ const FONT_SIZE_OPTIONS = [
 export function RichTextEditor({
   content,
   onChange,
+  onBlur,
   editable = true,
 }: RichTextEditorProps) {
   const editor = useEditor({
@@ -61,6 +64,7 @@ export function RichTextEditor({
     editable,
     immediatelyRender: false,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onBlur: () => onBlur?.(),
     editorProps: {
       attributes: {
         class: "laudo-prose min-h-[320px] px-4 py-3 focus:outline-none",

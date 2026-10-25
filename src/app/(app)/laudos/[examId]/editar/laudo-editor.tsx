@@ -100,6 +100,7 @@ export function LaudoEditor({
   }
 
   async function handleSave() {
+    if (saving || !dirty) return;
     setSaving(true);
     setError(null);
     try {
@@ -110,6 +111,15 @@ export function LaudoEditor({
     } finally {
       setSaving(false);
     }
+  }
+
+  // Salva sozinho assim que o usuário sai do texto (perde o foco do
+  // editor) — evita perder edições de quem esquece de clicar em "Salvar"
+  // antes de navegar pra outra tela. Reusa handleSave, que já não faz
+  // nada se não houver alteração pendente ou outro salvamento em curso.
+  function handleEditorBlur() {
+    if (isSigned) return;
+    void handleSave();
   }
 
   async function handleUnlock() {
@@ -352,6 +362,7 @@ export function LaudoEditor({
               setContentHtml(html);
               setDirty(true);
             }}
+            onBlur={handleEditorBlur}
           />
         }
       />
