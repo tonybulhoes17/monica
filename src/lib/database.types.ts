@@ -12,6 +12,7 @@ export interface Database {
           role: UserRole;
           crm: string | null;
           rqe: string | null;
+          active: boolean;
           created_at: string;
         };
         Insert: {
@@ -20,6 +21,7 @@ export interface Database {
           role: UserRole;
           crm?: string | null;
           rqe?: string | null;
+          active?: boolean;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;

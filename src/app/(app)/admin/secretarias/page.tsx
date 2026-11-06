@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { NewSecretaryForm } from "./new-secretary-form";
+import { DeleteSecretaryButton } from "./delete-secretary-button";
 
 export default async function SecretariasPage() {
   await requireAdmin();
@@ -9,6 +11,7 @@ export default async function SecretariasPage() {
     .from("profiles")
     .select("*")
     .eq("role", "secretary")
+    .eq("active", true)
     .order("created_at", { ascending: false });
 
   return (
@@ -18,8 +21,20 @@ export default async function SecretariasPage() {
       <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
         {secretaries && secretaries.length > 0 ? (
           secretaries.map((s) => (
-            <li key={s.id} className="px-4 py-3 text-sm text-slate-800">
-              {s.full_name}
+            <li
+              key={s.id}
+              className="flex items-center justify-between gap-4 px-4 py-3 text-sm text-slate-800"
+            >
+              <span>{s.full_name}</span>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={`/admin/secretarias/${s.id}`}
+                  className="text-sm text-slate-600 hover:underline"
+                >
+                  Editar
+                </Link>
+                <DeleteSecretaryButton id={s.id} fullName={s.full_name} />
+              </div>
             </li>
           ))
         ) : (

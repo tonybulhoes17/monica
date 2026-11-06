@@ -20,6 +20,11 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 export async function requireProfile(): Promise<Profile> {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
+  // Segunda camada além do ban no Supabase Auth (ver DELETE em
+  // src/app/api/admin/secretarias/[id]/route.ts): se por algum motivo uma
+  // sessão já aberta sobreviver ao ban, uma secretária desativada ainda
+  // assim não consegue usar o app.
+  if (!profile.active) redirect("/login");
   return profile;
 }
 
